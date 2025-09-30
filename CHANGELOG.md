@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-09-29
+
+### Added
+- **CSP support for script tags**: All IslandJS-generated `<script>` tags now automatically include a CSP nonce when one is present in the Rails request.  
+- **Flexible script attributes**: Helpers (`react_component`, `vue_component`, etc.) now support passing standard script attributes (`nonce`, `defer`, `async`, `crossorigin`, `integrity`).
+
 ## [0.4.0] - 2025-08-10
 
 ### Added
