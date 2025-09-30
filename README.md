@@ -420,6 +420,7 @@ Renders a React component with Turbo-compatible lifecycle and optional placehold
 - `class`: CSS class for container
 - `placeholder_class`: CSS class for placeholder content
 - `placeholder_style`: Inline styles for placeholder content
+- Script attributes: `nonce` (auto-detected for CSP), `defer`, `async`, `crossorigin`, `integrity`
 
 ## Placeholder Support
 

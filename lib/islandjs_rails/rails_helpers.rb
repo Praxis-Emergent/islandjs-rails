@@ -1,10 +1,13 @@
 module IslandjsRails
   module RailsHelpers
+    # Script attributes that can be passed through options
+    SCRIPT_ATTRIBUTES = %i[nonce defer async crossorigin integrity].freeze
+
     # Main helper method that combines all IslandJS functionality
-    def islands
+    def islands(**attributes)
       output = []
       output << island_partials  # Now uses vendor UMD partial
-      output << island_bundle_script
+      output << island_bundle_script(**attributes)
       output << umd_versions_debug if umd_debug_enabled?
       output.compact.join("\n").html_safe
     end
@@ -22,29 +25,32 @@ module IslandjsRails
     end
 
     # Render the main IslandJS bundle script tag
-    def island_bundle_script
+    def island_bundle_script(**attributes)
       manifest_path = Rails.root.join('public', 'islands_manifest.json')
       bundle_path = '/islands_bundle.js'
-      
+
+      # Get formatted HTML attributes with defaults (including auto-nonce and defer)
+      html_attributes = script_html_attributes(defer: true, **attributes)
+
       unless File.exist?(manifest_path)
         # Fallback to direct bundle path when no manifest
-        return html_safe_string("<script src=\"#{bundle_path}\" defer></script>")
+        return html_safe_string("<script src=\"#{bundle_path}\"#{html_attributes}></script>")
       end
-      
+
       begin
         manifest = JSON.parse(File.read(manifest_path))
         # Look for islands_bundle.js in manifest
         bundle_file = manifest['islands_bundle.js']
-        
+
         if bundle_file
-          html_safe_string("<script src=\"#{bundle_file}\" defer></script>")
+          html_safe_string("<script src=\"#{bundle_file}\"#{html_attributes}></script>")
         else
           # Fallback to direct bundle path
-          html_safe_string("<script src=\"#{bundle_path}\" defer></script>")
+          html_safe_string("<script src=\"#{bundle_path}\"#{html_attributes}></script>")
         end
       rescue JSON::ParserError
         # Fallback to direct bundle path on manifest parse error
-        html_safe_string("<script src=\"#{bundle_path}\" defer></script>")
+        html_safe_string("<script src=\"#{bundle_path}\"#{html_attributes}></script>")
       end
     end
 
@@ -66,7 +72,11 @@ module IslandjsRails
       # Handle placeholder options
       placeholder_class = options[:placeholder_class]
       placeholder_style = options[:placeholder_style]
-      
+
+      # Extract script attributes from options
+      script_attributes = options.slice(*SCRIPT_ATTRIBUTES)
+      script_attributes.compact!
+
       # For turbo-cache compatibility, store initial state as JSON in data attribute
       initial_state_json = props.to_json
       
@@ -91,7 +101,7 @@ module IslandjsRails
       end
       
       # Generate the mounting script - pass container_id as the only prop for turbo-cache pattern
-      mount_script = generate_react_mount_script(component_name, component_id, namespace, namespace_with_optional)
+      mount_script = generate_react_mount_script(component_name, component_id, namespace, namespace_with_optional, **script_attributes)
       
       # Return the container div with data-initial-state and script
       data_part = data_attrs.empty? ? '' : " #{data_attrs}"
@@ -133,9 +143,13 @@ module IslandjsRails
       # Extract options
       tag_name = options[:tag] || 'div'
       css_class = options[:class] || ''
-      
+
+      # Extract script attributes from options
+      script_attributes = options.slice(*SCRIPT_ATTRIBUTES)
+      script_attributes.compact!
+
       # Generate the mounting script
-      mount_script = generate_vue_mount_script(component_name, component_id, props_json)
+      mount_script = generate_vue_mount_script(component_name, component_id, props_json, **script_attributes)
       
       # Return the container div and script
       container_html = "<#{tag_name} id=\"#{component_id}\" class=\"#{css_class}\"></#{tag_name}>"
@@ -237,6 +251,37 @@ module IslandjsRails
 
     private
 
+    # Format HTML attributes into a string
+    # Returns a string like ' nonce="abc123" defer' or empty string if no attributes
+    def format_html_attributes(**attributes)
+      return '' if attributes.empty?
+
+      attributes.filter_map do |key, value|
+        next if value.nil? || value == false
+        key_str = key.to_s.tr('_', '-')
+        value == true ? " #{key_str}" : " #{key_str}=\"#{value}\""
+      end.join
+    end
+
+    # Get default script attributes with auto-nonce detection
+    def default_script_attributes(**user_attributes)
+      attributes = {}
+
+      # Auto-add nonce if CSP is enabled and not explicitly provided
+      if !user_attributes.key?(:nonce) && respond_to?(:content_security_policy_nonce)
+        nonce = content_security_policy_nonce
+        attributes[:nonce] = nonce if nonce
+      end
+
+      attributes.merge(user_attributes)
+    end
+
+    # Get formatted HTML attributes string for script tags
+    def script_html_attributes(**attributes)
+      script_attributes = default_script_attributes(**attributes)
+      format_html_attributes(**script_attributes)
+    end
+
     # Whether the floating UMD versions debug footer should render
     def umd_debug_enabled?
       return false unless Rails.env.development?
@@ -274,9 +319,11 @@ module IslandjsRails
     end
 
     # Generate React component mounting script with Turbo compatibility
-    def generate_react_mount_script(component_name, component_id, namespace, namespace_with_optional)
+    def generate_react_mount_script(component_name, component_id, namespace, namespace_with_optional, **attributes)
+      html_attributes = script_html_attributes(**attributes)
+
       <<~JAVASCRIPT
-        <script>
+        <script#{html_attributes}>
           (function() {
             function mount#{component_name}() {
               const container = document.getElementById('#{component_id}');
@@ -360,9 +407,11 @@ module IslandjsRails
     end
 
     # Generate Vue component mounting script with Turbo compatibility
-    def generate_vue_mount_script(component_name, component_id, props_json)
+    def generate_vue_mount_script(component_name, component_id, props_json, **attributes)
+      html_attributes = script_html_attributes(**attributes)
+
       <<~JAVASCRIPT
-        <script>
+        <script#{html_attributes}>
           (function() {
             let vueApp = null;
             
