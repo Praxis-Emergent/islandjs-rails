@@ -308,20 +308,6 @@ module IslandjsRails
       nil
     end
 
-    def download_umd_content(url)
-      require 'net/http'
-      require 'uri'
-      
-      uri = URI(url)
-      response = Net::HTTP.get_response(uri)
-      
-      unless response.code == '200'
-        raise IslandjsRails::Error, "Failed to download UMD from #{url}: #{response.code}"
-      end
-      
-      response.body
-    end
-
     def find_working_umd_url(package_name, version)
       puts "  🔍 Searching for UMD build..."
       

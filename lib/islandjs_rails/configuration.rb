@@ -30,11 +30,16 @@ module IslandjsRails
     
     # Maps packages to alternate CDN names (e.g., React 19+ → umd-react).
     def cdn_package_name(package_name, version)
-      if ['react', 'react-dom'].include?(package_name) && version.split('.').first.to_i >= 19
-    'umd-react'
-      else
-        package_name
+      # Handle nil or empty version strings
+      return package_name if version.nil? || version.empty?
+      
+      # Check if React 19+ to use community-maintained umd-react package
+      if ['react', 'react-dom'].include?(package_name)
+        major_version = version.split('.').first.to_i rescue 0
+        return 'umd-react' if major_version >= 19
       end
+      
+      package_name
     end
 
     # Vendor file helper methods
