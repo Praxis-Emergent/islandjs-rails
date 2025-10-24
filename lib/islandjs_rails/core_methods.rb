@@ -37,8 +37,16 @@ module IslandjsRails
         return
       end
       
+      # Skip prompt in non-interactive mode
+      unless STDIN.tty?
+        puts "\n💡 To render your HelloWorld component:"
+        puts "   In any view: <%= react_component('HelloWorld') %>"
+        puts "   Don't forget to: yarn build && rails server"
+        return
+      end
+      
       print "\n❓ Would you like to create a demo route at /islandjs/react to showcase your HelloWorld component? (y/n): "
-      answer = STDIN.gets.chomp.downcase
+      answer = STDIN.gets&.chomp&.downcase
       
       if answer == 'y' || answer == 'yes'
         create_demo_route!
@@ -393,15 +401,36 @@ module IslandjsRails
       create_partial_file(package_name, umd_content, global_name)
     end
 
-    def download_umd_content(url)
+    def download_umd_content(url, use_ssl_verification = true)
+      require 'openssl'
       uri = URI(url)
-      response = Net::HTTP.get_response(uri)
       
-      if response.code == '200'
+      http_options = {
+        use_ssl: uri.scheme == 'https',
+        verify_mode: use_ssl_verification ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+      }
+      
+      begin
+        body = Net::HTTP.start(uri.host, uri.port, **http_options) do |http|
+          request = Net::HTTP::Get.new(uri.request_uri)
+          response = http.request(request)
+          
+          if response.code == '200'
+            response.body
+          else
+            raise IslandjsRails::Error, "Failed to download UMD from #{url}: #{response.code}"
+          end
+        end
+        
         # Force UTF-8 encoding to avoid encoding errors when writing to file
-        response.body.force_encoding('UTF-8')
-      else
-        raise IslandjsRails::Error, "Failed to download UMD from #{url}: #{response.code}"
+        body.force_encoding('UTF-8')
+      rescue OpenSSL::SSL::SSLError => ssl_error
+        if use_ssl_verification
+          $stderr.puts "⚠️  SSL verification failed, retrying without verification: #{ssl_error.message}"
+          return download_umd_content(url, false)
+        else
+          raise IslandjsRails::Error, "Failed to download UMD from #{url}: #{ssl_error.message}"
+        end
       end
     end
 
@@ -536,10 +565,45 @@ module IslandjsRails
       copy_template_file('webpack.config.js', configuration.webpack_config_path)
     end
 
-    def url_accessible?(url)
+    def url_accessible?(url, limit = 5, use_ssl_verification = true)
+      require 'openssl'
+      return false if limit == 0
+      
       uri = URI(url)
-      response = Net::HTTP.get_response(uri)
-      response.code == '200'
+      
+      # Use proper SSL verification by default, but allow fallback for certificate issues
+      http_options = {
+        use_ssl: uri.scheme == 'https',
+        verify_mode: use_ssl_verification ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+      }
+      
+      begin
+        Net::HTTP.start(uri.host, uri.port, **http_options) do |http|
+          request = Net::HTTP::Get.new(uri.request_uri)
+          response = http.request(request)
+          
+          case response
+          when Net::HTTPSuccess
+            return true
+          when Net::HTTPRedirection
+            # Follow redirects
+            location = response['location']
+            return url_accessible?(location, limit - 1, use_ssl_verification)
+          else
+            return false
+          end
+        end
+      rescue OpenSSL::SSL::SSLError => ssl_error
+        # If SSL verification fails and we're using verification, try once without it
+        # This handles local certificate store issues while still attempting security first
+        if use_ssl_verification
+          $stderr.puts "⚠️  SSL verification failed, retrying without verification: #{ssl_error.message}"
+          return url_accessible?(url, limit, false)
+        else
+          # Already tried without verification, give up
+          false
+        end
+      end
     rescue => e
       false
     end

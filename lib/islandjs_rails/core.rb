@@ -281,6 +281,9 @@ module IslandjsRails
       version ||= version_for(package_name)
       return nil unless version
       
+      # Use cdn_package_name to handle React 19+ mapping to umd-react
+      cdn_package = configuration.cdn_package_name(package_name, version)
+      
       # Use original package name for URL, but get clean name for {name} substitution
       clean_name = (Configuration::SCOPED_PACKAGE_MAPPINGS[package_name] || package_name).split('/').last
       
@@ -292,8 +295,7 @@ module IslandjsRails
                  else
                    pattern  # Use pattern as-is for fixed filenames like IIFE
                  end
-          url = "#{cdn_base}/#{package_name}@#{version}/#{path}"
-
+          url = "#{cdn_base}/#{cdn_package}@#{version}/#{path}"
           
           if url_accessible?(url)
             puts "✓ Found island: #{url}"
@@ -353,18 +355,6 @@ module IslandjsRails
     end
 
     private
-
-    # Check if a URL is accessible (returns 200 status)
-    def url_accessible?(url)
-      require 'net/http'
-      require 'uri'
-      
-      uri = URI(url)
-      response = Net::HTTP.get_response(uri)
-      response.code == '200'
-    rescue => e
-      false
-    end
     
     # Check if a package has a partial file
     def has_partial?(package_name)

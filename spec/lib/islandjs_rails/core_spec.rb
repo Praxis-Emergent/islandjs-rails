@@ -840,6 +840,8 @@ RSpec.describe IslandjsRails::Core do
       end
 
       it 'creates demo route when user agrees' do
+        allow(STDIN).to receive(:tty?).and_return(true)
+        allow(STDIN).to receive(:gets).and_return("y\n")
         allow(core).to receive(:create_demo_route!)
         
         expect { core.send(:offer_demo_route!) }.to output(/Would you like to create a demo route/).to_stdout
@@ -848,6 +850,7 @@ RSpec.describe IslandjsRails::Core do
       end
 
       it 'skips demo route when user declines' do
+        allow(STDIN).to receive(:tty?).and_return(true)
         allow(STDIN).to receive(:gets).and_return("n\n")
         
         expect { core.send(:offer_demo_route!) }.to output(/No problem!/).to_stdout

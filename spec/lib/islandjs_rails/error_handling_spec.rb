@@ -35,8 +35,10 @@ RSpec.describe 'IslandJS Rails Error Handling' do
 
     describe '#download_umd_content' do
       it 'raises IslandjsRails::Error for non-200 status' do
+        http_mock = double('http')
         response = double('response', code: '404')
-        allow(Net::HTTP).to receive(:get_response).and_return(response)
+        allow(Net::HTTP).to receive(:start).and_yield(http_mock)
+        allow(http_mock).to receive(:request).and_return(response)
         
         expect {
           core.send(:download_umd_content, 'https://example.com/missing.js')
@@ -44,8 +46,10 @@ RSpec.describe 'IslandJS Rails Error Handling' do
       end
 
       it 'returns response body for successful download' do
+        http_mock = double('http')
         response = double('response', code: '200', body: 'console.log("test");')
-        allow(Net::HTTP).to receive(:get_response).and_return(response)
+        allow(Net::HTTP).to receive(:start).and_yield(http_mock)
+        allow(http_mock).to receive(:request).and_return(response)
         
         result = core.send(:download_umd_content, 'https://example.com/test.js')
         expect(result).to eq('console.log("test");')
