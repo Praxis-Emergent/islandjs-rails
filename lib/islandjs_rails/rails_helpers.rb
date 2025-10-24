@@ -354,13 +354,13 @@ module IslandjsRails
               const element = React.createElement(#{namespace_with_optional}.#{component_name}, props);
               
               try {
-                // Use React 18 createRoot if available, fallback to React 17 render
+                // Use React 19 createRoot if available, fallback to React 17 render
                 if (window.ReactDOM.createRoot) {
                   if (!container._reactRoot) {
                     container._reactRoot = window.ReactDOM.createRoot(container);
                   }
                   container._reactRoot.render(element);
-                  // React 18 automatically clears container - no manual cleanup needed
+                  // React 19 automatically clears container - no manual cleanup needed
                 } else {
                   // React 17 - render is synchronous and clears container automatically
                   window.ReactDOM.render(element, container);
@@ -375,7 +375,7 @@ module IslandjsRails
               const container = document.getElementById('#{component_id}');
               if (!container) return;
               
-              // React 18 unmount
+              // React 19 unmount
               if (container._reactRoot) {
                 container._reactRoot.unmount();
                 container._reactRoot = null;
