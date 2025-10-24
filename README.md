@@ -31,8 +31,8 @@ rails islandjs:init
 
 ### Install React
 ```bash
-rails "islandjs:install[react,18.3.1]"
-rails "islandjs:install[react-dom,18.3.1]"
+rails "islandjs:install[react,19.2.0]"
+rails "islandjs:install[react-dom,19.2.0]"
 ```
 
 ### Run Yarn In Development
@@ -115,7 +115,7 @@ Modern Rails developers face a painful choice:
 ### The IslandJS Rails Solution
 ```bash
 # Instead of complex vite/webpack configuration:
-rails "islandjs:install[react,18.3.1]"
+rails "islandjs:install[react,19.2.0]"
 rails "islandjs:install[react-beautiful-dnd]"
 rails "islandjs:install[quill]"
 rails "islandjs:install[recharts]"
@@ -132,7 +132,7 @@ const quill = new window.Quill("#editor", {
 });
 ```
 
-**Important Note:** IslandJS Rails works with packages that ship UMD builds. Many popular packages have UMD builds, but some modern packages do not — React 19+ removed UMD builds entirely. Future versions of IslandJS Rails will support local UMD generation for some packages (such as [React 19+](https://github.com/lofcz/umd-react)).
+**Important Note:** IslandJS Rails works with packages that ship UMD builds. Many popular packages have UMD builds, but some modern packages do not. Starting with **React 19**, official UMD builds were removed, but IslandJS Rails now automatically fetches React 19+ UMD builds from the community-maintained [`umd-react`](https://github.com/lofcz/umd-react) package. No manual setup needed.
 
 If you absolutely need a package that doesn't ship UMD builds, you have a few options:
 
@@ -170,12 +170,12 @@ rails islandjs:init
 
 # Install packages (adds to package.json + saves to vendor directory)
 rails "islandjs:install[react]"
-rails "islandjs:install[react,18.3.1]"       # With specific version
+rails "islandjs:install[react,19.2.0]"       # With specific version
 rails "islandjs:install[lodash]"
 
 # Update packages (updates package.json + refreshes vendor files)
 rails "islandjs:update[react]"
-rails "islandjs:update[react,18.3.1]"       # To specific version
+rails "islandjs:update[react,19.2.0]"       # To specific version
 
 # Remove packages (removes from package.json + deletes vendor files)
 rails "islandjs:remove[react]"
@@ -354,7 +354,7 @@ rails "islandjs:install[@solana/web3]"     # ❌ Wrong
 | Command | What it does | Example |
 |---------|--------------|---------|
 | `install` | Adds package via yarn + downloads UMD + saves to vendor | `rails islandjs:install[react]` |
-| `update` | Updates package version + refreshes UMD | `rails islandjs:update[react,18.3.1]` |
+| `update` | Updates package version + refreshes UMD | `rails islandjs:update[react,19.2.0]` |
 | `remove` | Removes package via yarn + deletes vendor files | `rails islandjs:remove[react]` |
 | `clean` | Removes ALL vendor files (destructive!) | `rails islandjs:clean` |
 

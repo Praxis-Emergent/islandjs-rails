@@ -27,6 +27,15 @@ module IslandjsRails
       '@babel/preset-env' => 'babel-preset-env',
       '@babel/preset-react' => 'babel-preset-react'
     }.freeze
+    
+    # Maps packages to alternate CDN names (e.g., React 19+ → umd-react).
+    def cdn_package_name(package_name, version)
+      if ['react', 'react-dom'].include?(package_name) && version.split('.').first.to_i >= 19
+    'umd-react'
+      else
+        package_name
+      end
+    end
 
     # Vendor file helper methods
     def vendor_manifest_path

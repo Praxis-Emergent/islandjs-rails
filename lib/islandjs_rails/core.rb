@@ -63,8 +63,8 @@ module IslandjsRails
       
       puts "\n🎉 IslandjsRails initialized successfully!"
       puts "\n📋 Next steps:"
-      puts "1. Install libraries:  rails \"islandjs:install[react,18.3.1]\""
-      puts "                       rails \"islandjs:install[react-dom,18.3.1]\"  "
+      puts "1. Install libraries:  rails \"islandjs:install[react,19.2.0]\""
+      puts "                       rails \"islandjs:install[react-dom,19.2.0]\"  "
       puts "2. Start dev:          yarn watch"
       puts "3. Use components:     <%= react_component('HelloWorld') %>"
       puts "4. Build for prod:     yarn build"
@@ -334,7 +334,7 @@ module IslandjsRails
                  else
                    pattern  # Use pattern as-is for fixed filenames like IIFE
                  end
-          url = "#{cdn_base}/#{package_name}@#{version}/#{path}"
+          url = "#{cdn_base}/#{configuration.cdn_package_name(package_name, version)}@#{version}/#{path}"
 
           
           if url_accessible?(url)

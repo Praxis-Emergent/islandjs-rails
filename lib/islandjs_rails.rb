@@ -22,6 +22,8 @@ module IslandjsRails
     'umd/{name}.production.min.js',
     'umd/{name}.development.js',
     'umd/{name}.min.js',
+    'umd/{name}.js',
+    'dist/{name}.production.min.js',
     'umd/{name}.js', 
     'dist/{name}.min.js',
     'dist/{name}.js',

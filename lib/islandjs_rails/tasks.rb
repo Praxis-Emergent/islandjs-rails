@@ -13,7 +13,7 @@ namespace :islandjs do
     
     if package_name.nil?
       puts "❌ Package name is required"
-      puts "Usage: rails \"islandjs:install[react,18.3.1]\""
+      puts "Usage: rails \"islandjs:install[react,19.2.0]\""
       exit 1
     end
     
@@ -27,7 +27,7 @@ namespace :islandjs do
     
     if package_name.nil?
       puts "❌ Package name is required"
-      puts "Usage: rails \"islandjs:update[react,18.3.1]\""
+      puts "Usage: rails \"islandjs:update[react,19.2.0]\""
       exit 1
     end
     
