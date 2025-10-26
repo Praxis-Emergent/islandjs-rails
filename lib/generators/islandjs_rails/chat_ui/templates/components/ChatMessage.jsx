@@ -24,18 +24,13 @@ function ChatMessage({ containerId }) {
 
   const isUser = role === 'user';
   const roleLabel = isUser ? '👤 You' : '🤖 Assistant';
-  const borderColor = isUser ? '#007bff' : '#28a745';
 
   return (
     <div 
       className={`chat-message chat-message--${role}`}
-      style={{ borderLeftColor: borderColor }}
     >
       <div className="chat-message__header">
         <span className="chat-message__role">{roleLabel}</span>
-        {createdAt && (
-          <span className="chat-message__time">{createdAt}</span>
-        )}
       </div>
       
       <div className="chat-message__content">
@@ -44,6 +39,10 @@ function ChatMessage({ containerId }) {
           isStreaming={isStreaming}
         />
       </div>
+      
+      {createdAt && (
+        <div className="chat-message__time">{createdAt}</div>
+      )}
 
       {toolCalls && toolCalls.length > 0 && (
         <div className="chat-message__tool-calls">

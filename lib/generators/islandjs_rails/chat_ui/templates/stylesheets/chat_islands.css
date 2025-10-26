@@ -5,55 +5,43 @@
   margin-bottom: 1rem;
 }
 
-/* Chat Message */
+/* Chat Message - Minimal styling like original RubyLLM */
 .chat-message {
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  border-radius: 8px;
-  border-left: 4px solid #ccc;
-  background: #f8f9fa;
-  transition: all 0.2s ease;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-left: 3px solid #ccc;
 }
 
 .chat-message--user {
   border-left-color: #007bff;
-  background: #e7f3ff;
 }
 
 .chat-message--assistant {
   border-left-color: #28a745;
-  background: #e8f5e9;
-}
-
-.chat-message:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Message Header */
 .chat-message__header {
+  font-weight: bold;
+  margin-bottom: 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
-  font-size: 0.9rem;
 }
 
 .chat-message__role {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.95rem;
+  font-weight: bold;
 }
 
 .chat-message__time {
-  font-size: 0.85rem;
+  font-size: 0.85em;
   color: #666;
+  margin-top: 5px;
 }
 
 /* Message Content */
 .chat-message__content {
-  color: #222;
-  line-height: 1.6;
-  font-size: 1rem;
+  white-space: pre-wrap;
 }
 
 /* Streaming Content */
@@ -90,7 +78,6 @@
 .chat-message__tool-calls {
   margin-top: 1rem;
   padding: 0.75rem;
-  background: rgba(0, 0, 0, 0.03);
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -210,37 +197,16 @@
   animation: slideIn 0.3s ease-out;
 }
 
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  .chat-message {
-    background: #2d3748;
-    color: #e2e8f0;
-  }
-
-  .chat-message--user {
-    background: #2c5282;
-  }
-
-  .chat-message--assistant {
-    background: #2f855a;
-  }
-
-  .chat-message__content {
-    color: #e2e8f0;
-  }
-
-  .streaming-cursor {
-    background-color: #e2e8f0;
-  }
-
-  .chat-container {
-    background: #1a202c;
-    border-color: #4a5568;
-  }
-
-  .tool-call-args {
-    background: #1a202c;
-    border-color: #4a5568;
-  }
+/* Blinking cursor for fallback */
+.blinking-cursor {
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
 }
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* Dark mode support removed for minimal styling */
 

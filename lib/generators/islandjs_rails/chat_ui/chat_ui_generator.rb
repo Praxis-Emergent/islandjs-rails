@@ -173,13 +173,13 @@ module IslandjsRails
 
         say "Adding Turbo Stream island actions to layout...", :cyan
 
-        # Try to inject before </head>
-        if layout_content.include?('</head>')
-          inject_into_file layout_path, before: /\s*<\/head>/ do
-            "\n    <%= turbo_stream_island_actions %>\n"
+        # Inject before </body> so it loads after Turbo
+        if layout_content.include?('</body>')
+          inject_into_file layout_path, before: /\s*<\/body>/ do
+            "\n    <%# IslandJS Rails: Custom Turbo Stream actions for islands %>\n    <%= turbo_stream_island_actions %>\n  "
           end
         else
-          say "Could not find </head> in layout. Add <%= turbo_stream_island_actions %> manually.", :yellow
+          say "Could not find </body> in layout. Add <%= turbo_stream_island_actions %> at end of body manually.", :yellow
         end
       end
 

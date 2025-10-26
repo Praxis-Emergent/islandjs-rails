@@ -75,7 +75,7 @@ function StreamingContent({ content = '', isStreaming = false }) {
 
   return (
     <div className="streaming-content">
-      <div className="streaming-content__text">
+      <div className="streaming-content__text" style={{ whiteSpace: 'pre-wrap' }}>
         {displayedContent}
         {isStreaming && (
           <span 
