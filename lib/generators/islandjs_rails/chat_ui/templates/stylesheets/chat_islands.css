@@ -1,0 +1,246 @@
+/* IslandJS Rails Chat Islands Styles */
+
+/* Chat Message Container */
+.message-island-container {
+  margin-bottom: 1rem;
+}
+
+/* Chat Message */
+.chat-message {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #ccc;
+  background: #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.chat-message--user {
+  border-left-color: #007bff;
+  background: #e7f3ff;
+}
+
+.chat-message--assistant {
+  border-left-color: #28a745;
+  background: #e8f5e9;
+}
+
+.chat-message:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Message Header */
+.chat-message__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.chat-message__role {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.chat-message__time {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Message Content */
+.chat-message__content {
+  color: #222;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+/* Streaming Content */
+.streaming-content {
+  position: relative;
+}
+
+.streaming-content__text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Streaming Cursor */
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  margin-left: 2px;
+  background-color: #333;
+  vertical-align: text-bottom;
+  transition: opacity 0.1s ease;
+}
+
+.streaming-cursor.visible {
+  opacity: 1;
+}
+
+.streaming-cursor.hidden {
+  opacity: 0;
+}
+
+/* Tool Calls */
+.chat-message__tool-calls {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tool-calls-header {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.tool-call {
+  margin-bottom: 0.75rem;
+}
+
+.tool-call:last-child {
+  margin-bottom: 0;
+}
+
+.tool-call strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.tool-call-args {
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  overflow-x: auto;
+  margin: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Chat Container */
+.chat-container {
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.chat-container__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+}
+
+.chat-container__empty p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Message Fallback (Progressive Enhancement) */
+.message-fallback {
+  /* Matches the React version for consistency */
+  font-family: inherit;
+  color: #222;
+}
+
+/* Scrollbar Styling (Optional) */
+.chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chat-message {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .chat-message__header {
+    font-size: 0.85rem;
+  }
+
+  .chat-message__content {
+    font-size: 0.95rem;
+  }
+
+  .chat-container {
+    max-height: 400px;
+  }
+}
+
+/* Animation for new messages */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-island-container {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .chat-message {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .chat-message--user {
+    background: #2c5282;
+  }
+
+  .chat-message--assistant {
+    background: #2f855a;
+  }
+
+  .chat-message__content {
+    color: #e2e8f0;
+  }
+
+  .streaming-cursor {
+    background-color: #e2e8f0;
+  }
+
+  .chat-container {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .tool-call-args {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+}
+

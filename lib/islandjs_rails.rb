@@ -8,6 +8,7 @@ require_relative "islandjs_rails/cli"
 if defined?(Rails)
   require_relative "islandjs_rails/railtie"
   require_relative "islandjs_rails/rails_helpers"
+  require_relative "islandjs_rails/turbo_streams"
 end
 
 module IslandjsRails
