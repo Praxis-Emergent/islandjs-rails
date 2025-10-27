@@ -11,6 +11,7 @@ module IslandjsRails
     initializer 'islandjs_rails.helpers' do
       ActiveSupport.on_load(:action_view) do
         include IslandjsRails::RailsHelpers
+        include IslandjsRails::TurboStreams::Helpers
       end
     end
 

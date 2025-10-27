@@ -249,6 +249,14 @@ module IslandjsRails
       "<script src='/vendor/#{name}#{extension}' data-turbo-track='reload'></script>".html_safe
     end
 
+    # Inject Turbo Stream island actions script
+    # This enables island_merge and island_replace Turbo actions
+    def turbo_stream_island_actions
+      html_safe_string(
+        "<script type=\"text/javascript\" data-turbo-track=\"reload\">\n#{IslandjsRails::TurboStreams::Actions.inject_script}\n</script>"
+      )
+    end
+
     private
 
     # Format HTML attributes into a string
