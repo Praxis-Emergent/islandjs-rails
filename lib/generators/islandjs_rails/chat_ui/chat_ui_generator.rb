@@ -58,69 +58,12 @@ module IslandjsRails
                  'app/javascript/islands/components/ChatContainer.jsx'
       end
 
-      def create_island_streaming_concern
-        say "Adding IslandStreaming concern...", :cyan
-        template 'concerns/island_streaming.rb',
-                 'app/models/concerns/island_streaming.rb'
-      end
-
-      def enhance_message_model
+      def check_message_model
         return unless File.exist?('app/models/message.rb')
 
-        say "Enhancing Message model with island streaming...", :cyan
-
-        # Add the concern
-        inject_into_file 'app/models/message.rb', after: "class Message < ApplicationRecord\n" do
-          "  include IslandStreaming\n"
-        end
-
-        # Enhance broadcast_append_chunk if it exists
-        if File.read('app/models/message.rb').include?('def broadcast_append_chunk')
-          # Add island streaming to existing method
-          inject_into_file 'app/models/message.rb',
-                           after: /def broadcast_append_chunk\(content\)\n.*?partial:.*?\n/m do
-            <<~RUBY
-              
-                  # IslandJS Rails: Stream to React component
-                  broadcast_island_chunk(
-                    "chat_\#{chat_id}",
-                    target: "message_\#{id}_island",
-                    content: content
-                  )
-            RUBY
-          end
-        else
-          # Add the method
-          inject_into_file 'app/models/message.rb', before: "end\n" do
-            <<~RUBY
-              
-                def broadcast_append_chunk(content)
-                  # HTML fallback
-                  broadcast_append_to "chat_\#{chat_id}",
-                    target: "message_\#{id}_content",
-                    partial: "messages/content",
-                    locals: { content: content }
-                  
-                  # IslandJS Rails: Stream to React component
-                  broadcast_island_chunk(
-                    "chat_\#{chat_id}",
-                    target: "message_\#{id}_island",
-                    content: content
-                  )
-                end
-            RUBY
-          end
-        end
-      rescue StandardError => e
-        say "Could not automatically enhance Message model: #{e.message}", :yellow
-        say "Add this to your Message model:", :yellow
-        say "  include IslandStreaming", :yellow
-      end
-
-      def create_helper
-        say "Creating chat islands helper...", :cyan
-        copy_file 'helpers/chat_islands_helper.rb',
-                  'app/helpers/chat_islands_helper.rb'
+        say "Checking Message model...", :cyan
+        say "  ✓ Message model found - no modifications needed!", :green
+        say "  ℹ React islands work with your existing broadcast_append_chunk method", :cyan
       end
 
       def add_stylesheets
@@ -163,23 +106,144 @@ module IslandjsRails
         ERB
       end
 
-      def update_layout
+      def create_demo_view
+        say "Creating island chat demo view...", :cyan
+        create_file 'app/views/island_chats/show.html.erb', <<~ERB
+          <p style="color: green"><%= notice %></p>
+
+          <%= turbo_stream_from "chat_\#{@chat.id}" %>
+
+          <% content_for :title, "Island Chat Demo" %>
+
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px; color: white;">
+            <h1 style="margin: 0 0 10px 0;">🏝️ Island Chat Demo</h1>
+            <p style="margin: 0; opacity: 0.9;">Chat <%= @chat.id %> - Using <strong><%= @chat.model.name %></strong></p>
+            <p style="margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
+              ✨ React Islands + Streaming • Progressive Enhancement • Smooth Animations
+            </p>
+          </div>
+
+          <div id="messages">
+            <% @chat.messages.where.not(id: nil).each do |message| %>
+              <%= render 'messages/message_island', message: message %>
+            <% end %>
+          </div>
+
+          <div style="margin-top: 30px;">
+            <%= render "messages/form", chat: @chat, message: @message %>
+          </div>
+
+          <div style="margin-top: 20px; display: flex; gap: 15px;">
+            <%= link_to "← Standard Chat UI", chat_path(@chat), style: "padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px;" %>
+            <%= link_to "Back to chats", chats_path, style: "padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;" %>
+          </div>
+        ERB
+      end
+
+      def add_demo_controller_action
+        controller_path = 'app/controllers/islandjs_demo_controller.rb'
+        
+        # Check if controller exists
+        unless File.exist?(controller_path)
+          say "Creating IslandjsDemoController...", :cyan
+          create_file controller_path, <<~RUBY
+            class IslandjsDemoController < ApplicationController
+              def index
+                # IslandJS Rails demo homepage
+              end
+              
+              def react
+                # Demo route for showcasing IslandJS React integration
+              end
+              
+              def react_chat
+                # Island-enhanced chat UI demo (compare with /chats/:id)
+                @chat = Chat.find(params[:id])
+                @message = Message.new
+                render 'island_chats/show'
+              end
+            end
+          RUBY
+          return
+        end
+
+        # Add react_chat action if it doesn't exist
+        controller_content = File.read(controller_path)
+        return if controller_content.include?('def react_chat')
+
+        say "Adding react_chat action to IslandjsDemoController...", :cyan
+        inject_into_file controller_path, before: /^end\s*$/ do
+          <<~RUBY
+            
+              def react_chat
+                # Island-enhanced chat UI demo (compare with /chats/:id)
+                @chat = Chat.find(params[:id])
+                @message = Message.new
+                render 'island_chats/show'
+              end
+          RUBY
+        end
+      end
+
+      def add_demo_route
+        route_content = File.read('config/routes.rb')
+        
+        # Check if route already exists
+        return if route_content.include?('islandjs/react/chats')
+
+        say "Adding demo route for island chat...", :cyan
+        
+        # Find the islandjs routes section and add after it
+        if route_content.include?("get 'islandjs/react'")
+          inject_into_file 'config/routes.rb', after: /get 'islandjs\/react'.*\n/ do
+            "  get 'islandjs/react/chats/:id', to: 'islandjs_demo#react_chat', as: :islandjs_react_chat\n"
+          end
+        else
+          # Add the whole islandjs routes section
+          route <<~RUBY
+            # IslandJS demo routes
+            get 'islandjs', to: 'islandjs_demo#index'
+            get 'islandjs/react', to: 'islandjs_demo#react'
+            get 'islandjs/react/chats/:id', to: 'islandjs_demo#react_chat', as: :islandjs_react_chat
+          RUBY
+        end
+      end
+
+      def add_link_to_standard_chat
+        chat_show_path = 'app/views/chats/show.html.erb'
+        return unless File.exist?(chat_show_path)
+
+        chat_content = File.read(chat_show_path)
+        return if chat_content.include?('islandjs_react_chat_path')
+
+        say "Adding link to island version in standard chat view...", :cyan
+        
+        # Try to find the "Back to chats" link and enhance it
+        if chat_content.include?('link_to "Back to chats"')
+          gsub_file chat_show_path, 
+                    /(<%=\s*link_to "Back to chats".*?%>)/m do |match|
+            <<~ERB.strip
+              <div style="margin-top: 20px; display: flex; gap: 15px;">
+                <%= link_to "🏝️ View Island Version", islandjs_react_chat_path(@chat), style: "padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: bold;" %>
+                #{match}
+              </div>
+            ERB
+          end
+        end
+      end
+
+      def check_layout
         layout_path = 'app/views/layouts/application.html.erb'
         return unless File.exist?(layout_path)
 
-        # Check if turbo_stream_island_actions is already included
         layout_content = File.read(layout_path)
-        return if layout_content.include?('turbo_stream_island_actions')
-
-        say "Adding Turbo Stream island actions to layout...", :cyan
-
-        # Inject before </body> so it loads after Turbo
-        if layout_content.include?('</body>')
-          inject_into_file layout_path, before: /\s*<\/body>/ do
-            "\n    <%# IslandJS Rails: Custom Turbo Stream actions for islands %>\n    <%= turbo_stream_island_actions %>\n  "
-          end
+        
+        if layout_content.include?('<%= islands %>')
+          say "Checking layout...", :cyan
+          say "  ✓ Layout has <%= islands %> helper - React components will hydrate!", :green
         else
-          say "Could not find </body> in layout. Add <%= turbo_stream_island_actions %> at end of body manually.", :yellow
+          say "⚠️  Layout missing <%= islands %> helper", :yellow
+          say "   Add <%= islands %> to your layout's <head> section for React islands to work", :yellow
         end
       end
 
@@ -187,14 +251,18 @@ module IslandjsRails
         say "\n✅ IslandJS Rails chat UI installed!", :green
         say "\nWhat was created:", :cyan
         say "  • React components: ChatMessage, StreamingContent, ChatContainer"
-        say "  • IslandStreaming concern for Message model"
-        say "  • Chat islands helper and styles"
+        say "  • Chat island styles"
         say "  • Island-enhanced message partial"
+        say "  • Demo controller action and route"
+        say "  • Island chat demo view"
 
         say "\nNext steps:", :cyan
         say "  1. Run: yarn watch (in a separate terminal)", :yellow
         say "  2. Start Rails: bin/rails server", :yellow
-        say "  3. Visit your chat UI and see streaming in action!", :yellow
+        say "  3. Visit /chats to create a chat", :yellow
+        say "  4. Compare standard vs island versions:", :yellow
+        say "     • Standard: /chats/:id", :yellow
+        say "     • Islands:  /islandjs/react/chats/:id", :yellow
 
         say "\nTo use the island partial in your views:", :cyan
         say "  <%= render 'messages/message_island', message: @message %>", :yellow
@@ -203,6 +271,10 @@ module IslandjsRails
         say "  ✨ Smooth character-by-character animation"
         say "  ✨ Blinking cursor during streaming"
         say "  ✨ Progressive enhancement (fallback without JS)"
+        say "  ✨ Side-by-side comparison with standard UI"
+        say "\n"
+        say "Note: Zero changes to your Message model!", :green
+        say "React islands work with your existing Turbo Stream setup.", :green
         say "\n"
       end
 

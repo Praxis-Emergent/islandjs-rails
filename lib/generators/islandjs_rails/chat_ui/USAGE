@@ -1,57 +1,51 @@
 Description:
-    Generates a streaming chat UI with React islands for RubyLLM.
-    Adds Turbo Streams support to enable real-time updates without page reloads.
+    Enhances your RubyLLM chat UI with React islands for smooth streaming animations.
+    Zero changes to your models - works with existing Turbo Streams.
 
 Example:
     rails generate islandjs_rails:chat_ui
 
-    This will create:
-        Components:
-            app/javascript/islands/components/ChatMessage.jsx
-            app/javascript/islands/components/StreamingContent.jsx
-            app/javascript/islands/components/ChatContainer.jsx
-        
-        Models:
-            app/models/concerns/island_streaming.rb
-        
-        Helpers:
-            app/helpers/chat_islands_helper.rb
-        
-        Stylesheets:
-            app/assets/stylesheets/chat_islands.css
-        
-        Views:
-            app/views/messages/_message_island.html.erb
+Creates:
+    React Components (3):
+        app/javascript/islands/components/ChatMessage.jsx
+        app/javascript/islands/components/StreamingContent.jsx
+        app/javascript/islands/components/ChatContainer.jsx
+    
+    Views (2):
+        app/views/messages/_message_island.html.erb
+        app/views/island_chats/show.html.erb
+    
+    Styles (1):
+        app/assets/stylesheets/chat_islands.css
 
-    It will also:
-        - Enhance your Message model with IslandStreaming
-        - Add Turbo Stream island actions to your layout
-        - Install React if not already present
+Modifies:
+    app/controllers/islandjs_demo_controller.rb  (adds react_chat action)
+    config/routes.rb                              (adds demo route)
+    app/views/chats/show.html.erb                 (adds comparison link)
 
 Prerequisites:
-    - RubyLLM must be installed: gem 'ruby_llm'
-    - Run `rails generate ruby_llm:install` first
-    - Run `rails generate ruby_llm:chat_ui` to create base models
+    • RubyLLM installed: gem 'ruby_llm'
+    • Run: rails generate ruby_llm:chat_ui
+    • Layout must have: <%= islands %> in <head>
 
 Usage:
-    After running the generator:
+    1. Generate the chat UI:
+       $ rails generate islandjs_rails:chat_ui
     
-    1. Start yarn in watch mode:
-       $ yarn watch
+    2. Start development servers:
+       $ yarn watch          # Terminal 1
+       $ bin/rails server    # Terminal 2
     
-    2. Use the island partial in your views:
+    3. Compare the UIs:
+       /chats/:id                    → Standard UI
+       /islandjs/react/chats/:id     → Island UI (with animations)
+    
+    4. Use in your own views:
        <%= render 'messages/message_island', message: @message %>
-    
-    3. Or use the helper:
-       <%= render_message_island(@message) %>
-    
-    4. Your messages will now stream with smooth animations!
 
 Features:
-    ✨ Character-by-character streaming animation
-    ✨ Blinking cursor during streaming
-    ✨ Progressive enhancement (HTML fallback)
-    ✨ Tool call visualization
-    ✨ Dark mode support
-    ✨ Responsive design
-
+    ✨ Character-by-character streaming
+    ✨ Blinking cursor animation
+    ✨ Progressive enhancement (works without JS)
+    ✨ Side-by-side comparison demo
+    ✨ Zero model modifications required
