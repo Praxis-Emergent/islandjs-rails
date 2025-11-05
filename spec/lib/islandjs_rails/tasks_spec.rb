@@ -134,16 +134,14 @@ RSpec.describe "Islandjs Rake Tasks" do
       allow(config).to receive_messages(
         package_json_path: '/path/to/package.json',
         partials_dir: '/path/to/partials',
-        webpack_config_path: '/path/to/webpack.config.js',
-        supported_cdns: ['https://unpkg.com'],
-
+        supported_cdns: ['https://unpkg.com']
       )
 
       expect { Rake.application.invoke_task("islandjs:config") }.to output(
         a_string_including("📊 IslandjsRails Configuration")
         .and(including("Package.json path: /path/to/package.json"))
         .and(including("Partials directory: /path/to/partials"))
-        .and(including("Webpack config path: /path/to/webpack.config.js"))
+        .and(including("Vite Islands config: vite.config.islands.ts"))
         .and(including("Supported CDNs: https://unpkg.com"))
         .and(including("Built-in global name overrides: 16 available"))
       ).to_stdout

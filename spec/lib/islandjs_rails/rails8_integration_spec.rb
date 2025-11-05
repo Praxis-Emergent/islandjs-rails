@@ -14,9 +14,12 @@ RSpec.describe 'Rails 8 Integration' do
 
   describe 'Rails 8 Asset Pipeline Integration' do
     it 'works with Rails 8 asset pipeline structure' do
-      # Rails 8 uses app/assets/builds for compiled assets
+      # Create Rails 8 asset structure
       builds_dir = File.join(temp_dir, 'app', 'assets', 'builds')
       FileUtils.mkdir_p(builds_dir)
+      
+      # Create Gemfile for ViteInstaller
+      File.write(File.join(temp_dir, 'Gemfile'), "source 'https://rubygems.org'\ngem 'rails'")
       
       # Test UMD partials creation
       IslandjsRails.init!
@@ -25,15 +28,18 @@ RSpec.describe 'Rails 8 Integration' do
       expect(Dir.exist?(partials_dir)).to be true
     end
     
-    it 'generates Rails 8 compatible webpack config' do
+    it 'generates Rails 8 compatible Vite config' do
+      # Create Gemfile for ViteInstaller
+      File.write(File.join(temp_dir, 'Gemfile'), "source 'https://rubygems.org'\ngem 'rails'")
+      
       IslandjsRails.init!
-      webpack_path = File.join(temp_dir, 'webpack.config.js')
+      vite_path = File.join(temp_dir, 'vite.config.islands.ts')
       
-      expect(File.exist?(webpack_path)).to be true
+      expect(File.exist?(vite_path)).to be true
       
-      content = File.read(webpack_path)
+      content = File.read(vite_path)
       expect(content).to include('islands')
-      expect(content).to include('public') # UMD Sync asset location
+      expect(content).to include('public') # Islands output location
     end
   end
 
@@ -80,18 +86,18 @@ RSpec.describe 'Rails 8 Integration' do
 
   describe 'Rails 8 Performance Optimizations' do
     it 'minimizes asset pipeline integration' do
-      # UMD Sync should not interfere with Rails 8 asset optimizations
-      webpack_path = File.join(temp_dir, 'webpack.config.js')
-      create_temp_webpack_config(temp_dir)
+      # Islands should not interfere with Rails 8 asset optimizations
+      vite_path = File.join(temp_dir, 'vite.config.islands.ts')
+      create_temp_vite_config(temp_dir)
       
-      IslandjsRails.core.update_webpack_externals
+      IslandjsRails.core.update_vite_externals
       
-      content = File.read(webpack_path)
+      content = File.read(vite_path)
       
       # Should preserve Rails 8 optimizations
-      expect(content).to include('module.exports')
-      expect(content).to include('externals')
-      expect(content).not_to include('react') # No externals added yet
+      expect(content).to include('export default')
+      expect(content).to include('external') # Vite uses 'external' not 'externals'
+      expect(content).to include('external: []') # No externals added yet
     end
   end
 

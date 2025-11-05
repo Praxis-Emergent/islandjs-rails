@@ -33,9 +33,9 @@ module IslandjsRails
         return
       end
 
-      # Check if webpack config exists
-      unless File.exist?(Rails.root.join('webpack.config.js'))
-        Rails.logger.warn "IslandJS: webpack.config.js not found. Run 'rails islandjs:init' to set up."
+      # Check if Vite Islands config exists
+      unless File.exist?(Rails.root.join('vite.config.islands.ts'))
+        Rails.logger.warn "IslandJS: vite.config.islands.ts not found. Run 'rails islandjs:init' to set up."
         return
       end
 
@@ -45,14 +45,14 @@ module IslandjsRails
         return
       end
 
-      # Check if essential webpack dependencies are installed
-      essential_deps = ['webpack', 'webpack-cli', '@babel/core']
+      # Check if essential Vite dependencies are installed
+      essential_deps = ['vite', '@vitejs/plugin-react']
       missing_deps = essential_deps.select do |dep|
         !system("yarn list #{dep} > /dev/null 2>&1")
       end
 
       unless missing_deps.empty?
-        Rails.logger.warn "IslandJS: Missing dependencies: #{missing_deps.join(', ')}. Run 'rails islandjs:init' to install."
+        Rails.logger.warn "IslandJS: Missing dependencies: #{missing_deps.join(', ')}. Run 'yarn install'."
       end
     end
   end

@@ -237,9 +237,12 @@ module IslandjsRails
         <% # Load each library separately for better caching %>
       ERB
       
-      manifest['libs'].each do |lib|
+      # CRITICAL: Order libraries correctly (react before react-dom)
+      ordered_libs = order_libraries(manifest['libs'])
+      
+      ordered_libs.each do |lib|
         content += <<~ERB
-          <script src="/islands/vendor/#{lib['file']}" data-turbo-track="reload"></script>
+          <script src="/vendor/islands/#{lib['file']}" data-turbo-track="reload"></script>
         ERB
       end
       
@@ -256,7 +259,7 @@ module IslandjsRails
         <%# IslandJS Rails Vendor UMD Scripts (Combined Mode) %>
         <%# Generated automatically - do not edit manually %>
         <%# Combined bundle: #{combined_info['size_kb']}KB %>
-        <script src="/islands/vendor/#{combined_info['file']}" data-turbo-track="reload"></script>
+        <script src="/vendor/islands/#{combined_info['file']}" data-turbo-track="reload"></script>
       ERB
       
       write_vendor_partial(content)

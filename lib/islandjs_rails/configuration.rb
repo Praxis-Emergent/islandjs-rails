@@ -2,16 +2,15 @@ require 'pathname'
 
 module IslandjsRails
   class Configuration
-    attr_accessor :package_json_path, :partials_dir, :webpack_config_path, :supported_cdns,
+    attr_accessor :package_json_path, :partials_dir, :supported_cdns,
                   :vendor_script_mode, :vendor_order, :vendor_dir, :combined_basename
 
     def initialize
       @package_json_path = Rails.root.join('package.json')
       @partials_dir = Rails.root.join('app', 'views', 'shared', 'islands')
-      @webpack_config_path = Rails.root.join('webpack.config.js')
       @vendor_script_mode = :external_split  # :external_split or :external_combined
       @vendor_order = %w[react react-dom]    # combine order for :external_combined
-      @vendor_dir = Rails.root.join('public', 'islands', 'vendor')
+      @vendor_dir = Rails.root.join('public', 'vendor', 'islands')
       @combined_basename = 'islands-vendor'
       @supported_cdns = [
         'https://unpkg.com',

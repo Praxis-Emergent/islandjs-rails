@@ -3,29 +3,27 @@ module IslandjsRails
     # Additional core methods (part 2)
     
     def build_bundle!
-      puts "🔨 Building IslandJS webpack bundle..."
+      puts "🔨 Building IslandJS bundle with Vite..."
       
       unless system('which yarn > /dev/null 2>&1')
         puts "❌ yarn not found, cannot build bundle"
         return false
       end
       
-      unless system('yarn list webpack-cli > /dev/null 2>&1')
-        puts "⚠️  webpack-cli not found, installing..."
-        system('yarn add --dev webpack-cli@^5.1.4')
+      # Check if vite.config.islands.ts exists
+      unless File.exist?(Rails.root.join('vite.config.islands.ts'))
+        puts "⚠️  vite.config.islands.ts not found. Run: rails islandjs:init"
+        return false
       end
       
-      if ENV['NODE_ENV'] == 'production' || ENV['RAILS_ENV'] == 'production'
-        success = system('yarn build')
-      else
-        success = system('yarn build > /dev/null 2>&1')
-      end
+      # Run Vite build
+      success = system('yarn build:islands')
       
       if success
         puts "✅ Bundle built successfully"
         return true
       else
-        puts "❌ Build failed. Check your webpack configuration."
+        puts "❌ Build failed. Check your vite.config.islands.ts"
         return false
       end
     end
@@ -269,27 +267,27 @@ module IslandjsRails
     end
 
     def install_essential_dependencies!
-      puts "📦 Installing essential webpack dependencies..."
-      puts "  Installing: #{ESSENTIAL_DEPENDENCIES.join(', ')}"
+      puts "📦 Installing essential Vite dependencies..."
       
-      missing_deps = ESSENTIAL_DEPENDENCIES.select do |dep|
-        package_name = dep.split('@').first
-        !package_installed?(package_name)
+      deps_to_install = []
+      
+      # Check for Vite and React plugin
+      deps_to_install << 'vite@^5.4.19' unless package_installed?('vite')
+      deps_to_install << '@vitejs/plugin-react@^5.0.0' unless package_installed?('@vitejs/plugin-react')
+      
+      if deps_to_install.any?
+        puts "  Installing: #{deps_to_install.join(', ')}"
+        success = system("yarn add --dev #{deps_to_install.join(' ')}")
+        
+        unless success
+          puts "❌ Failed to install dependencies"
+          exit 1
+        end
+      else
+        puts "  ✓ All essential dependencies already installed"
       end
       
-      if missing_deps.empty?
-        puts "✓ All essential dependencies already installed"
-        return
-      end
-      
-      success = system("yarn add --dev #{missing_deps.join(' ')}")
-      
-      unless success
-        puts "❌ Failed to install dependencies"
-        exit 1
-      end
-      
-      puts "✓ Installed essential webpack dependencies"
+      puts "✓ Installed essential Vite dependencies"
     end
 
     def create_scaffolded_structure!
@@ -561,9 +559,7 @@ module IslandjsRails
       puts "  ✓ Removed from package.json: #{package_name}"
     end
 
-    def generate_webpack_config!
-      copy_template_file('webpack.config.js', configuration.webpack_config_path)
-    end
+    # No longer needed - vite.config.islands.ts created by ViteInstaller
 
     def url_accessible?(url, limit = 5, use_ssl_verification = true)
       require 'openssl'
@@ -616,59 +612,49 @@ module IslandjsRails
       detect_global_name(package_name)
     end
     
-    def reset_webpack_externals
-      webpack_config_path = configuration.webpack_config_path
-      return unless File.exist?(webpack_config_path)
-      
-      content = File.read(webpack_config_path)
-      
-      externals_block = <<~JS
-      externals: {
-        // IslandjsRails managed externals - do not edit manually
-      },
-      JS
-      
-      updated_content = content.gsub(
-        /externals:\s*\{[^}]*\}(?:,)?/m,
-        externals_block.chomp
-      )
-      
-      File.write(webpack_config_path, updated_content)
-      puts "  ✓ Reset webpack externals"
-    end
+    # No longer needed - Vite externals are in vite.config.islands.ts
 
-    def update_webpack_externals(package_name = nil, global_name = nil)
-      webpack_config_path = configuration.webpack_config_path
-      return unless File.exist?(webpack_config_path)
+    def update_vite_externals(package_name = nil, global_name = nil)
+      vite_config_path = Rails.root.join('vite.config.islands.ts')
+      return unless File.exist?(vite_config_path)
       
-      content = File.read(webpack_config_path)
+      content = File.read(vite_config_path)
       
       externals = {}
+      globals = {}
       
-      # Get installed packages from vendor manifest instead of partials
+      # Get installed packages from vendor manifest
       vendor_manager = IslandjsRails.vendor_manager
       manifest = vendor_manager.send(:read_manifest)
       
       manifest['libs'].each do |lib|
         pkg = lib['name']
-        externals[pkg] = get_global_name_for_package(pkg)
+        global = get_global_name_for_package(pkg)
+        externals[pkg] = true
+        globals[pkg] = global
       end
       
-      externals_lines = externals.map { |pkg, global| "    \"#{pkg}\": \"#{global}\"" }
-      externals_block = <<~JS
-      externals: {
-        // IslandjsRails managed externals - do not edit manually
-      #{externals_lines.join(",\n")}
-      },
-      JS
+      # Build external array for Vite
+      external_array = externals.keys.map { |pkg| "'#{pkg}'" }.join(', ')
       
+      # Build globals object for Vite
+      globals_lines = globals.map { |pkg, global| "          '#{pkg}': '#{global}'" }
+      globals_block = globals_lines.join(",\n")
+      
+      # Update external array
       updated_content = content.gsub(
-        /externals:\s*\{[^}]*\}(?:,)?/m,
-        externals_block.chomp
+        /external:\s*\[[^\]]*\]/m,
+        "external: [#{external_array}]"
       )
       
-      File.write(webpack_config_path, updated_content)
-      puts "  ✓ Updated webpack externals"
+      # Update globals object
+      updated_content = updated_content.gsub(
+        /globals:\s*\{[^}]*\}/m,
+        "globals: {\n#{globals_block}\n        }"
+      )
+      
+      File.write(vite_config_path, updated_content)
+      puts "  ✓ Updated Vite externals in vite.config.islands.ts"
     end
   end
 end

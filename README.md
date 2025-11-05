@@ -114,7 +114,7 @@ Modern Rails developers face a painful choice:
 
 ### The IslandJS Rails Solution
 ```bash
-# Instead of complex vite/webpack configuration:
+# Instead of complex build configuration:
 rails "islandjs:install[react,19.2.0]"
 rails "islandjs:install[react-beautiful-dnd]"
 rails "islandjs:install[quill]"
@@ -122,7 +122,7 @@ rails "islandjs:install[recharts]"
 rails "islandjs:install[lodash]"
 ```
 
-**Result**: Zero-to-no webpack configuration, instant prod builds, access to hundreds of UMD packages.
+**Result**: Zero build configuration, instant prod builds, access to hundreds of UMD packages.
 
 ### Access UMD installed JS packages via the window from within React components:
 ```bash
@@ -154,7 +154,7 @@ If you absolutely need a package that doesn't ship UMD builds, you have a few op
 - **Package.json Integration** - (npm + yarn)
 - **CDN Downloads** - Fetches UMD builds from unpkg.com and jsdelivr.net
 - **Rails Integration** - Serves auto-generated vendor UMD files for seamless integration
-- **Webpack Externals** - Updates webpack config to prevent duplicate bundling while allowing development in jsx or other formats
+- **Vite Externals** - Updates vite.config.islands.ts to prevent duplicate bundling while allowing development in jsx or other formats
 - **Placeholder Support** - Eliminate layout shift with automatic placeholder management ⚡ *New in v0.2.0*
 - **Flexible Architecture** - Compose and namespace libraries as needed
 
@@ -313,21 +313,24 @@ function SolanaComponent() {
 export default SolanaComponent;
 ```
 
-### Webpack Externals
+### Vite Externals
 
-IslandJS Rails automatically configures webpack externals for scoped packages:
+IslandJS Rails automatically configures Vite externals for scoped packages:
 
-```javascript
-// webpack.config.js (auto-generated)
-module.exports = {
-  externals: {
-    // IslandJS Rails managed externals - do not edit manually
-    "@solana/web3.js": "solanaWeb3",
-    "react": "React",
-    "react-dom": "ReactDOM"
-  },
-  // ... rest of config
-};
+```typescript
+// vite.config.islands.ts (auto-generated)
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      external: ['@solana/web3.js'],
+      output: {
+        globals: {
+          '@solana/web3.js': 'solanaWeb3'
+        }
+      }
+    }
+  }
+});
 ```
 
 ### Troubleshooting Scoped Packages
@@ -366,8 +369,7 @@ IslandjsRails.configure do |config|
   # Directory for ERB partials (default: app/views/shared/islands)
   config.partials_dir = Rails.root.join('app/views/shared/islands')
   
-  # Webpack configuration path
-  config.webpack_config_path = Rails.root.join('webpack.config.js')
+  # Vite Islands configuration is at vite.config.islands.ts (auto-managed)
   
   # Vendor file delivery mode (default: :external_split)
   config.vendor_script_mode = :external_split    # One file per library
@@ -389,7 +391,7 @@ end
 ### Helpers
 
 #### `islands`
-Single helper that includes all UMD vendor scripts and your webpack bundle.
+Single helper that includes all UMD vendor scripts and your Vite bundle.
 
 ```erb
 <%= islands %>
@@ -397,7 +399,7 @@ Single helper that includes all UMD vendor scripts and your webpack bundle.
 
 This automatically loads:
 - All UMD libraries from vendor files (either split or combined mode)
-- Your webpack bundle
+- Your Vite bundle
 - Debug information in development
 
 #### `react_component(name, props, options, &block)`
@@ -606,18 +608,25 @@ window.islandjsRails = {
 const { React, UI, Utils } = window.islandjsRails;
 ```
 
-### Webpack Integration
+### Vite Integration
 
-IslandJS Rails automatically updates your webpack externals:
+IslandJS Rails automatically updates your Vite externals:
 
-```javascript
-// webpack.config.js (auto-generated)
-module.exports = {
-  externals: {
-    'react': 'React',
-    'lodash': '_'
+```typescript
+// vite.config.islands.ts (auto-generated)
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      external: ['react', 'react-dom'],
+      output: {
+        globals: {
+          'react': 'React',
+          'react-dom': 'ReactDOM'
+        }
+      }
+    }
   }
-};
+});
 ```
 
 ### Configuration Options
@@ -627,8 +636,7 @@ IslandjsRails.configure do |config|
   # Directory for ERB partials (default: app/views/shared/islands)
   config.partials_dir = Rails.root.join('app/views/shared/islands')
   
-  # Path to webpack config (default: webpack.config.js)
-  config.webpack_config_path = Rails.root.join('webpack.config.js')
+  # Vite Islands config is at vite.config.islands.ts (auto-managed)
   
   # Path to package.json (default: package.json)
   config.package_json_path = Rails.root.join('package.json')
@@ -665,11 +673,11 @@ end
 **Global name conflicts:**
 IslandJS Rails includes built-in mappings for common libraries. For packages with unusual global names, check the library's documentation or browser console to find the correct global variable name.
 
-**Webpack externals not updating:**
+**Vite externals not updating:**
 ```bash
 # Sync to update externals
 rails islandjs:sync
-
+```
 # Or clean and reinstall
 rails islandjs:clean
 rails islandjs:install[react]
@@ -734,6 +742,6 @@ Planned features for future releases:
 - **Fast Deploys**: CDN libraries cache globally
 
 ### 🎯 **Developer Experience**
-- **Zero Webpack Expertise**: Rails developers stay in Rails
+- **Zero Build Expertise**: Rails developers stay in Rails
 - **Turbo Compatible**: Seamless navigation and caching
 - **Progressive Enhancement**: Start with Hotwire, add React islands

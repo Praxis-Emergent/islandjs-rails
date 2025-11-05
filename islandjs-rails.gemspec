@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["ericarnold00+praxisemergent@gmail.com"]
 
   spec.summary       = "Simple, modern JavaScript islands for Rails"
-  spec.description   = "IslandJS Rails enables React and other JavaScript islands in Rails apps with zero webpack configuration. Load UMD libraries from CDNs, integrate with ERB partials, and render components with Turbo-compatible lifecycle management."
+  spec.description   = "IslandJS Rails enables React and other JavaScript islands in Rails apps with zero build configuration. Load UMD libraries from CDNs, integrate with ERB partials, and render components with Turbo-compatible lifecycle management."
   spec.homepage      = "https://github.com/praxis-emergent/islandjs-rails"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.0.0"
@@ -40,11 +40,16 @@ Gem::Specification.new do |spec|
 
         rails islandjs:init
     
+    This will set up Vite for Islands architecture alongside your existing setup.
+    
   MSG
 
   # Rails integration
   spec.add_dependency "rails", ">= 7.0", "< 9.0"
   spec.add_dependency "thor", "~> 1.0"
+  
+  # Note: vite_rails is NOT a hard dependency
+  # IslandJS will install it if needed during rails islandjs:init
   
   # Development dependencies
   spec.add_development_dependency "rake", "~> 13.0"

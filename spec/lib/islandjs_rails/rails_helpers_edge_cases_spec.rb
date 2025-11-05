@@ -1,10 +1,12 @@
 require 'spec_helper'
+require 'islandjs_rails/rails_helpers'
 
 RSpec.describe IslandjsRails::RailsHelpers do
+  let(:temp_dir) { '/tmp/test_app' }
   let(:view_context) { ActionView::Base.new(ActionView::LookupContext.new([]), {}, nil) }
   
   before do
-    allow(Rails).to receive(:root).and_return(Pathname.new('/tmp/test_app'))
+    allow(Rails).to receive(:root).and_return(Pathname.new(temp_dir))
     allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new('development'))
   end
 
@@ -72,52 +74,68 @@ RSpec.describe IslandjsRails::RailsHelpers do
   end
 
   describe '#island_bundle_script' do
-    let(:manifest_path) { Rails.root.join('public', 'islands_manifest.json') }
-
+    let(:manifest_path) { File.join(temp_dir, 'public', 'islands', '.vite', 'manifest.json') }
+    
     context 'when manifest file does not exist' do
       before do
-        allow(File).to receive(:exist?).with(manifest_path).and_return(false)
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(Pathname.new(manifest_path)).and_return(false)
       end
 
-      it 'returns fallback script tag' do
+      it 'returns build hint comment' do
         result = view_context.island_bundle_script
-        expect(result).to include('<script src="/islands_bundle.js" defer>')
+        expect(result).to include('Islands bundle not built')
       end
     end
 
     context 'when manifest file exists but is malformed' do
       before do
-        allow(File).to receive(:exist?).with(manifest_path).and_return(true)
-        allow(File).to receive(:read).with(manifest_path).and_return('invalid json')
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(Pathname.new(manifest_path)).and_return(true)
+        allow(File).to receive(:read).with(Pathname.new(manifest_path)).and_return('invalid json')
       end
 
-      it 'returns fallback script tag on JSON parse error' do
+      it 'returns parse error comment on JSON parse error' do
         result = view_context.island_bundle_script
-        expect(result).to include('<script src="/islands_bundle.js" defer>')
+        expect(result).to include('Islands manifest parse error')
       end
     end
 
     context 'when manifest exists but does not contain islands_bundle.js' do
       before do
-        allow(File).to receive(:exist?).with(manifest_path).and_return(true)
-        allow(File).to receive(:read).with(manifest_path).and_return('{"other_bundle.js": "/other_bundle.hash.js"}')
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(Pathname.new(manifest_path)).and_return(true)
+        # Use Vite manifest format without islands entry
+        manifest_json = JSON.generate({
+          'other_bundle.js' => {
+            'file' => 'assets/other_bundle.hash.js'
+          }
+        })
+        allow(File).to receive(:read).with(Pathname.new(manifest_path)).and_return(manifest_json)
       end
 
-      it 'returns fallback script tag' do
+      it 'returns entry not found comment' do
         result = view_context.island_bundle_script
-        expect(result).to include('<script src="/islands_bundle.js" defer>')
+        expect(result).to include('Islands entry not found in manifest')
       end
     end
 
     context 'when manifest contains islands_bundle.js' do
       before do
-        allow(File).to receive(:exist?).with(manifest_path).and_return(true)
-        allow(File).to receive(:read).with(manifest_path).and_return('{"islands_bundle.js": "/islands_bundle.abc123.js"}')
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(Pathname.new(manifest_path)).and_return(true)
+        # Use Vite manifest format
+        manifest_json = JSON.generate({
+          'app/javascript/entrypoints/islands.js' => {
+            'file' => 'assets/islands_bundle.abc123.js'
+          }
+        })
+        allow(File).to receive(:read).with(Pathname.new(manifest_path)).and_return(manifest_json)
       end
 
       it 'returns script tag with hashed filename' do
         result = view_context.island_bundle_script
-        expect(result).to include('<script src="/islands_bundle.abc123.js" defer>')
+        expect(result).to include('islands_bundle.abc123.js')
       end
     end
   end
@@ -214,7 +232,7 @@ RSpec.describe IslandjsRails::RailsHelpers do
         expect(result).to include('IslandJS Debug Info')
         expect(result).to include('Bundle Path: /islands_bundle.js')
         expect(result).to include('Partials: 2 found')
-        expect(result).to include('Webpack Config: ✓')
+        expect(result).to include('Vite Islands Config: ✓')
         expect(result).to include('Package.json: ✓')
       end
 

@@ -108,15 +108,23 @@ RSpec.configure do |config|
       File.write(File.join(dir, 'package.json'), JSON.pretty_generate(package_json))
     end
 
-    def create_temp_webpack_config(dir)
-      webpack_content = <<~JS
-        module.exports = {
-          externals: {
-            // Existing externals
+    def create_temp_vite_config(dir)
+      vite_content = <<~TS
+        import { defineConfig } from 'vite'
+        import react from '@vitejs/plugin-react'
+
+        export default defineConfig({
+          build: {
+            rollupOptions: {
+              external: [],
+              output: {
+                globals: {}
+              }
+            }
           }
-        };
-      JS
-      File.write(File.join(dir, 'webpack.config.js'), webpack_content)
+        })
+      TS
+      File.write(File.join(dir, 'vite.config.islands.ts'), vite_content)
     end
 
     def mock_rails_root(path)

@@ -171,17 +171,19 @@ RSpec.describe IslandjsRails::RailsHelpers do
       
       result = view_context.island_bundle_script
       
-      expect(result).to include('/islands_bundle.js')
+      # When manifest doesn't exist, shows build hint
+      expect(result).to include('Islands bundle not built')
     end
 
     it 'handles JSON parsing errors gracefully' do
-      manifest_path = File.join(temp_dir, 'public', 'islands_manifest.json')
+      manifest_path = File.join(temp_dir, 'public', 'islands', '.vite', 'manifest.json')
       FileUtils.mkdir_p(File.dirname(manifest_path))
       File.write(manifest_path, 'invalid json{')
       
       result = view_context.island_bundle_script
       
-      expect(result).to include('/islands_bundle.js')
+      # When manifest is invalid, shows parse error
+      expect(result).to include('Islands manifest parse error')
     end
   end
 
@@ -305,37 +307,48 @@ RSpec.describe IslandjsRails::RailsHelpers do
   end
 
   describe '#island_bundle_script' do
-    let(:manifest_path) { File.join(temp_dir, 'public', 'islands_manifest.json') }
+    let(:manifest_path) { File.join(temp_dir, 'public', 'islands', '.vite', 'manifest.json') }
     
     before do
       FileUtils.mkdir_p(File.dirname(manifest_path))
     end
     
-    it 'uses webpack manifest when available' do
-      manifest = { 'islands_bundle.js' => '/islandjs_rails_bundle.abc123.js' }
-      File.write(manifest_path, JSON.generate(manifest))
-      
-      result = view_context.island_bundle_script
-      
-      expect(result).to include('/islandjs_rails_bundle.abc123.js')
-    end
-    
-    it 'uses islands_bundle.js from manifest' do
-      manifest = { 
-        'islands_bundle.js' => '/islandjs_rails_bundle.def456.js',
-        'other_bundle.js' => '/other_bundle.abc123.js' 
+    it 'uses Vite manifest when available' do
+      # Create the Vite manifest structure
+      manifest = {
+        'app/javascript/entrypoints/islands.js' => {
+          'file' => 'assets/islands_bundle.abc123.js'
+        }
       }
       File.write(manifest_path, JSON.generate(manifest))
       
       result = view_context.island_bundle_script
       
-      expect(result).to include('/islandjs_rails_bundle.def456.js')
+      expect(result).to include('islands_bundle.abc123.js')
     end
     
-    it 'falls back to islands_bundle.js when no manifest' do
+    it 'uses islands_bundle.js from manifest' do
+      # Create the Vite manifest structure
+      manifest = {
+        'app/javascript/entrypoints/islands.js' => {
+          'file' => 'assets/islands_bundle.def456.js'
+        },
+        'other_bundle.js' => {
+          'file' => 'assets/other_bundle.abc123.js'
+        }
+      }
+      File.write(manifest_path, JSON.generate(manifest))
+      
       result = view_context.island_bundle_script
       
-      expect(result).to include('/islands_bundle.js')
+      expect(result).to include('islands_bundle.def456.js')
+    end
+    
+    it 'shows build hint when no manifest' do
+      result = view_context.island_bundle_script
+      
+      # When manifest doesn't exist, shows build hint
+      expect(result).to include('Islands bundle not built')
     end
     
     it 'handles invalid JSON gracefully' do
@@ -343,7 +356,8 @@ RSpec.describe IslandjsRails::RailsHelpers do
       
       result = view_context.island_bundle_script
       
-      expect(result).to include('/islands_bundle.js')
+      # When manifest is invalid, shows parse error
+      expect(result).to include('Islands manifest parse error')
     end
   end
 

@@ -1,5 +1,6 @@
 require_relative "islandjs_rails/version"
 require_relative "islandjs_rails/configuration"
+require_relative "islandjs_rails/vite_integration"
 require_relative "islandjs_rails/core"
 require_relative "islandjs_rails/vendor_manager"
 require_relative "islandjs_rails/cli"
