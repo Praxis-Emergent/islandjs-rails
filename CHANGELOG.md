@@ -5,6 +5,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2025-11-05
+
+### 🎉 Major Release: Webpack → Vite Migration
+
+This release replaces webpack with Vite for a dramatically faster, more modern build system.
+
+### ⚠️ BREAKING CHANGES
+
+**Build System**:
+- Replaced webpack with Vite as the build tool
+- Config file changed: `webpack.config.js` → `vite.config.islands.ts`
+- Build command changed: `yarn build` → `yarn build:islands`
+- Watch command changed: `yarn watch` → `yarn islands:watch`
+- Manifest location changed: `public/islands_manifest.json` → `public/islands/.vite/manifest.json`
+
+**Dependencies**:
+- Removed: `webpack`, `webpack-cli`, `webpack-manifest-plugin`
+- Added: `vite`, `@vitejs/plugin-react`, `vite-plugin-ruby`
+
+**Files**:
+- `app/javascript/islands/index.js` is no longer created (Vite uses entrypoints directly)
+- New file: `vite.config.islands.ts` for Islands-specific Vite configuration
+
+### ✅ What Stays the Same
+
+**No code changes needed!** All runtime APIs remain identical:
+- All Rails helpers work the same (`react_component`, `island_partials`, etc.)
+- Island components don't need any changes
+- ERB templates don't need any changes
+- UMD vendor system works identically
+- All `rails islandjs:*` commands work the same way
+
+### 🚀 Benefits
+
+- ⚡ **2-10x faster builds** compared to webpack
+- 🔥 **Instant Hot Module Replacement (HMR)** during development
+- 📦 **Smaller bundle sizes** with superior tree-shaking
+- 🎯 **Simpler configuration** - no complex webpack setup needed
+- 🌐 **Modern tooling** - built for ES modules and modern JavaScript
+- 🔧 **Better Rails integration** via `vite_rails` gem
+
+### 📚 Upgrade Guide
+
+See [UPGRADING.md](UPGRADING.md) for detailed migration instructions. Summary:
+
+1. Update gem: `bundle update islandjs-rails`
+2. Remove webpack files: `rm webpack.config.js`
+3. Reinitialize: `rails islandjs:init`
+4. Rebuild: `yarn build:islands`
+
+### Changed
+
+- Updated all documentation to reference Vite instead of webpack
+- CLI and Rake task descriptions now mention "Vite externals" instead of "webpack externals"
+- Build output messages updated for Vite workflow
+- Error messages and hints updated to reference Vite commands
+
+### Removed
+
+- Webpack configuration template
+- Webpack-related dependencies from package.json template
+- `ESSENTIAL_DEPENDENCIES` constant (replaced with inline Vite deps)
+- References to webpack in README, gemspec, and all documentation
+
 ## [0.7.0] - 2025-10-27
 
 ### Added
