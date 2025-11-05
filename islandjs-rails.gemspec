@@ -19,12 +19,13 @@ Gem::Specification.new do |spec|
 
   # Specify which files should be added to the gem when it is released.
   spec.files = Dir.chdir(__dir__) do
-    `git ls-files -z`.split("\x0").reject do |f|
-      (File.expand_path(f) == __FILE__) ||
+    Dir.glob("{lib,exe,templates}/**/*", File::FNM_DOTMATCH).reject do |f|
+      File.directory?(f) ||
+        (File.expand_path(f) == __FILE__) ||
         f.start_with?(*%w[bin/ test/ spec/ features/ .git .github .claude appveyor Gemfile]) ||
         f.match?(%r{\A(\.rspec|Rakefile)\z}) ||
         f.end_with?(".gem")
-    end
+    end + %w[README.md LICENSE.md CHANGELOG.md]
   end
   
   spec.bindir = "exe"
