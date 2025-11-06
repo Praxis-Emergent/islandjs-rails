@@ -117,25 +117,13 @@ module IslandjsRails
       package_json = read_package_json
       scripts = package_json['scripts'] || {}
       
-      # Add Islands-specific scripts
+      # Always use namespaced scripts for consistency
       scripts['build:islands'] = 'vite build --config vite.config.islands.ts'
-      scripts['islands:watch'] = 'vite build --config vite.config.islands.ts --watch'
+      scripts['watch:islands'] = 'vite build --config vite.config.islands.ts --watch'
       
-      # Update main build script to include Islands
-      if scripts['build']
-        # If build script exists and includes vite, make it build both
-        unless scripts['build'].include?('build:islands')
-          if scripts['build'].include?('vite build')
-            # Replace single vite build with both builds
-            scripts['build'] = 'vite build --emptyOutDir && yarn build:islands'
-          else
-            # Append Islands build
-            scripts['build'] = "#{scripts['build']} && yarn build:islands"
-          end
-        end
-      else
-        # No build script yet, create one
-        scripts['build'] = 'vite build --emptyOutDir && yarn build:islands'
+      # If there's an existing Vite setup (like Inertia), update main build script
+      if scripts['build'] && scripts['build'].include?('vite') && !scripts['build'].include?('build:islands')
+        scripts['build'] = "#{scripts['build']} && yarn build:islands"
       end
       
       package_json['scripts'] = scripts

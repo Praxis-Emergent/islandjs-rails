@@ -780,6 +780,8 @@ RSpec.describe IslandjsRails::Core do
       it 'runs yarn build when yarn is available' do
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
         allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
         allow(core).to receive(:system).with('yarn build:islands').and_return(true)
         
         expect { core.send(:build_bundle!) }.to output(/Bundle built successfully/).to_stdout
@@ -794,6 +796,8 @@ RSpec.describe IslandjsRails::Core do
       it 'warns when build fails' do
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
         allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
         allow(core).to receive(:system).with('yarn build:islands').and_return(false)
         
         expect { core.send(:build_bundle!) }.to output(/Build failed/).to_stdout
@@ -878,7 +882,7 @@ RSpec.describe IslandjsRails::Core do
         
         expect(File.exist?(package_json_path)).to be true
         content = JSON.parse(File.read(package_json_path))
-        expect(content['scripts']).to include('build', 'islands:watch')
+        expect(content['scripts']).to include('build:islands', 'watch:islands')
         expect(content['name']).to eq(File.basename(temp_dir))
       end
 

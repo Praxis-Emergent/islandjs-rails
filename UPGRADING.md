@@ -9,7 +9,7 @@ Version 1.0 replaces webpack with Vite for a faster, more modern build system.
 - **Build system**: webpack → Vite
 - **Config file**: `webpack.config.js` → `vite.config.islands.ts`
 - **Build command**: `yarn build` → `yarn build:islands`
-- **Watch command**: `yarn watch` → `yarn islands:watch`
+- **Watch command**: `yarn watch` → `yarn watch:islands`
 - **Manifest location**: `public/islands_manifest.json` → `public/islands/.vite/manifest.json`
 
 ### Upgrade Steps
@@ -53,7 +53,7 @@ Version 1.0 replaces webpack with Vite for a faster, more modern build system.
 
 5. **Update your build/deploy scripts** (if any):
    - Change `yarn build` to `yarn build:islands`
-   - Change `yarn watch` to `yarn islands:watch`
+   - Change `yarn watch` to `yarn watch:islands`
 
 6. **Rebuild your islands**:
    ```bash

@@ -16,8 +16,18 @@ module IslandjsRails
         return false
       end
       
+      # Determine which build script to use based on package.json
+      package_json_path = Rails.root.join('package.json')
+      build_cmd = 'yarn build'
+      
+      if File.exist?(package_json_path)
+        package_json = JSON.parse(File.read(package_json_path))
+        scripts = package_json['scripts'] || {}
+        build_cmd = 'yarn build:islands' if scripts.key?('build:islands')
+      end
+      
       # Run Vite build
-      success = system('yarn build:islands')
+      success = system(build_cmd)
       
       if success
         puts "✅ Bundle built successfully"

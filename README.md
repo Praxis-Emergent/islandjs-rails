@@ -40,7 +40,7 @@ rails "islandjs:install[react-dom,19.1.0]"
 
 ### Run Yarn In Development
 ```bash
-yarn watch
+yarn watch:islands
 ```
 
 ### Render React Components
@@ -56,7 +56,7 @@ yarn watch
 
 ### Build For Production
 ```bash
-yarn build # you may remove any stale islandjs bundles before committing
+yarn build:islands
 ```
 
 > 💡 **Turbo Cache Compatible**: React components automatically persist state across Turbo navigation! See [Turbo Cache Integration](#turbo-cache-integration) for details.
@@ -219,27 +219,24 @@ For development and building your JavaScript:
 
 ```bash
 # Development - watch for changes and rebuild automatically
-yarn watch
-# Or with npm: npm run watch
+yarn watch:islands
 
 # Production - build optimized bundle for deployment
-yarn build
-# Or with npm: npm run build
+yarn build:islands
 
 # Install dependencies (after adding packages via islandjs:install)
 yarn install
-# Or with npm: npm install
 ```
 
 **Development Workflow:**
-1. Run `yarn watch` (or `npm run watch`) in one terminal
+1. Run `yarn watch:islands` in one terminal
 2. Edit your components in `app/javascript/islands/components/`
-3. Changes are automatically compiled to `public/`
+3. Changes are automatically compiled and fingerprinted
 
 **Production Deployment:**
-1. Run `yarn build` (or `npm run build`) to create optimized bundle
-2. Commit the built assets: `git add public/islands_* && git add public/islands/*`
-3. Deploy with confidence - assets are prebuilt
+1. Run `yarn build:islands` to create optimized bundle with content hashing
+2. Commit the built assets: `git add public/islands/`
+3. Deploy - Vite's content hashing ensures automatic cache busting
 
 ## 📦 Working with Scoped Packages
 

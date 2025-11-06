@@ -129,10 +129,8 @@ module IslandjsRails
         "private" => true,
         "type" => "module",
         "scripts" => {
-          "build" => "vite build --emptyOutDir && yarn build:islands",
           "build:islands" => "vite build --config vite.config.islands.ts",
-          "islands:watch" => "vite build --config vite.config.islands.ts --watch",
-          "dev" => "vite dev"
+          "watch:islands" => "vite build --config vite.config.islands.ts --watch"
         },
         "dependencies" => {},
         "devDependencies" => {}
@@ -268,14 +266,13 @@ module IslandjsRails
       puts "   <%= react_component('HelloWorld', { message: 'Hello!' }) %>"
       puts ""
       
-      if vite_integration.inertia_installed?
-        puts "💡 Inertia detected! You now have both:"
-        puts "   - Inertia SPA: yarn vite dev"
-        puts "   - Islands: yarn islands:watch"
+      if vite_integration.vite_installed?
+        puts "💡 Existing Vite setup detected! You now have:"
+        puts "   - Islands dev: yarn watch:islands"
         puts "   - Build both: yarn build"
       else
         puts "💡 Start development:"
-        puts "   yarn islands:watch"
+        puts "   yarn watch:islands"
       end
       
       puts ""

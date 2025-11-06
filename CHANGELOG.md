@@ -17,7 +17,7 @@ This release replaces webpack with Vite for a dramatically faster, more modern b
 - Replaced webpack with Vite as the build tool
 - Config file changed: `webpack.config.js` → `vite.config.islands.ts`
 - Build command changed: `yarn build` → `yarn build:islands`
-- Watch command changed: `yarn watch` → `yarn islands:watch`
+- Watch command changed: `yarn watch` → `yarn watch:islands`
 - Manifest location changed: `public/islands_manifest.json` → `public/islands/.vite/manifest.json`
 
 **Dependencies**:
@@ -73,8 +73,8 @@ See [UPGRADING.md](UPGRADING.md) for detailed migration instructions. Summary:
 ## [0.7.0] - 2025-10-27
 
 ### Added
-- **CleanIslandsPlugin**: Webpack plugin that automatically removes old island bundle files from the public directory after new builds, preventing stale file accumulation
-- Simplified build scripts by removing manual `rm -f public/islands_*` commands
+- **CleanIslandsPlugin**: Build plugin that automatically removes old island bundle files from the public directory after new builds, preventing stale file accumulation
+- Simplified build scripts by removing manual cleanup commands
 
 ## [0.6.0] - 2025-10-24
 
