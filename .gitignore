@@ -10,6 +10,7 @@
 *.so
 *.o
 *.a
+*.gem
 mkmf.log
 Gemfile.lock
 
