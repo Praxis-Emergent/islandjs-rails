@@ -204,7 +204,7 @@ rails islandjs:vendor:status
 ```
 
 **Vendor System Modes:**
-- **`:external_split`** (default): Each library served as separate file from `public/islands/vendor/`
+- **`:external_split`** (default): Each library served as separate file from `public/vendor/islands/`
 - **`:external_combined`**: All libraries concatenated into single bundle with cache-busting hash
 
 **Benefits of Vendor System:**
