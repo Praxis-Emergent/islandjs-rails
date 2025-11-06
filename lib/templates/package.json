@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "vite build --config vite.config.islands.ts",
     "build:islands": "vite build --config vite.config.islands.ts",
-    "islands:watch": "vite build --config vite.config.islands.ts --watch"
+    "watch:islands": "vite build --config vite.config.islands.ts --watch"
   },
   "dependencies": {},
   "devDependencies": {

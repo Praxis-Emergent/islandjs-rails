@@ -180,6 +180,8 @@ RSpec.describe 'Core Methods Coverage Tests' do
         allow(ENV).to receive(:[]).with('NODE_ENV').and_return('production')
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
         allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
         allow(core).to receive(:system).with('yarn build:islands').and_return(true)
         
         result = core.send(:build_bundle!)
@@ -191,6 +193,8 @@ RSpec.describe 'Core Methods Coverage Tests' do
         allow(ENV).to receive(:[]).with('RAILS_ENV').and_return('development')
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
         allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
         allow(core).to receive(:system).with('yarn build:islands').and_return(true)
         
         result = core.send(:build_bundle!)
@@ -215,6 +219,8 @@ RSpec.describe 'Core Methods Coverage Tests' do
       it 'returns false when build fails' do
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
         allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
         allow(core).to receive(:system).with('yarn build:islands').and_return(false)
         
         result = core.send(:build_bundle!)
