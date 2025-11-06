@@ -484,10 +484,10 @@ Placeholders shine in Turbo Stream scenarios where content updates dynamically:
 <%= turbo_stream.replace "post_#{@post.id}_reactions" do %>
   <%= react_component("Reactions", { 
     postId: @post.id, 
-    initialCount: @post.reactions.count 
+    reactions: @post.reactions.as_json
   }) do %>
     <div class="reactions-placeholder" style="height: 32px;">
-      <span class="text-muted">Loading reactions...</span>
+      <span class="text-muted">Mounting/Rendering placeholder content goes here</span>
     </div>
   <% end %>
 <% end %>
