@@ -30,9 +30,12 @@ rails islandjs:init
 ```
 
 ### Install React
+
+> **Note:** Currently limited to React 19.1.0 until [umd-react](https://github.com/lofcz/umd-react) workflow is fixed (PR pending) to publish newer versions to unpkg.com properly.
+
 ```bash
-rails "islandjs:install[react,19.2.0]"
-rails "islandjs:install[react-dom,19.2.0]"
+rails "islandjs:install[react,19.1.0]"
+rails "islandjs:install[react-dom,19.1.0]"
 ```
 
 ### Run Yarn In Development
@@ -115,7 +118,7 @@ Modern Rails developers face a painful choice:
 ### The IslandJS Rails Solution
 ```bash
 # Instead of complex build configuration:
-rails "islandjs:install[react,19.2.0]"
+rails "islandjs:install[react,19.1.0]"
 rails "islandjs:install[react-beautiful-dnd]"
 rails "islandjs:install[quill]"
 rails "islandjs:install[recharts]"
@@ -170,12 +173,12 @@ rails islandjs:init
 
 # Install packages (adds to package.json + saves to vendor directory)
 rails "islandjs:install[react]"
-rails "islandjs:install[react,19.2.0]"       # With specific version
+rails "islandjs:install[react,19.1.0]"       # With specific version
 rails "islandjs:install[lodash]"
 
 # Update packages (updates package.json + refreshes vendor files)
 rails "islandjs:update[react]"
-rails "islandjs:update[react,19.2.0]"       # To specific version
+rails "islandjs:update[react,19.1.0]"       # To specific version
 
 # Remove packages (removes from package.json + deletes vendor files)
 rails "islandjs:remove[react]"
@@ -357,7 +360,7 @@ rails "islandjs:install[@solana/web3]"     # ❌ Wrong
 | Command | What it does | Example |
 |---------|--------------|---------|
 | `install` | Adds package via yarn + downloads UMD + saves to vendor | `rails islandjs:install[react]` |
-| `update` | Updates package version + refreshes UMD | `rails islandjs:update[react,19.2.0]` |
+| `update` | Updates package version + refreshes UMD | `rails islandjs:update[react,19.1.0]` |
 | `remove` | Removes package via yarn + deletes vendor files | `rails islandjs:remove[react]` |
 | `clean` | Removes ALL vendor files (destructive!) | `rails islandjs:clean` |
 
