@@ -7,7 +7,7 @@
 [![RSpec Tests](https://img.shields.io/badge/tests-367%20passing-brightgreen.svg)](spec/)
 [![Rails 8 Ready](https://img.shields.io/badge/Rails%208-Ready-brightgreen.svg)](#rails-8-ready)
 
-IslandJS Rails supports the development of React islands in Rails apps by synchronizing `package.json` dependencies with UMD libraries served in `public/islands/vendor`.
+IslandJS Rails supports the development of React islands in Rails apps by synchronizing `package.json` dependencies with UMD libraries served in `public/vendor/islands`.
 
 Write Turbo compatible JSX in `app/javascript/islands/components/` and render it with a `react_component` helper in ERB templates (including Turbo Stream partials) — **Vue and other framework support can be added with a bit of work**.
 
@@ -375,8 +375,8 @@ IslandjsRails.configure do |config|
   config.vendor_script_mode = :external_split    # One file per library
   # config.vendor_script_mode = :external_combined # Single combined bundle
   
-  # Vendor files directory (default: public/islands/vendor)
-  config.vendor_dir = Rails.root.join('public/islands/vendor')
+  # Vendor files directory (default: public/vendor/islands)
+  config.vendor_dir = Rails.root.join('public/vendor/islands')
   
   # Combined bundle filename base (default: 'islands-vendor')
   config.combined_basename = 'islands-vendor'
@@ -645,8 +645,8 @@ IslandjsRails.configure do |config|
   config.vendor_script_mode = :external_split    # One file per library
   # config.vendor_script_mode = :external_combined # Single combined bundle
   
-  # Vendor files directory (default: public/islands/vendor)
-  config.vendor_dir = Rails.root.join('public/islands/vendor')
+  # Vendor files directory (default: public/vendor/islands)
+  config.vendor_dir = Rails.root.join('public/vendor/islands')
   
   # Combined bundle filename base (default: 'islands-vendor')
   config.combined_basename = 'islands-vendor'
