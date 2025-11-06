@@ -28,7 +28,19 @@ Version 1.0 replaces webpack with Vite for a faster, more modern build system.
    yarn remove webpack webpack-cli webpack-manifest-plugin
    ```
 
-3. **Reinitialize with Vite**:
+3. **Add ESM support to package.json**:
+   Add `"type": "module"` to your `package.json`:
+   ```json
+   {
+     "name": "your-app",
+     "private": true,
+     "type": "module",
+     ...
+   }
+   ```
+   This is required for Vite's TypeScript config to use ESM imports.
+
+4. **Reinitialize with Vite**:
    ```bash
    rails islandjs:init
    ```
@@ -39,11 +51,11 @@ Version 1.0 replaces webpack with Vite for a faster, more modern build system.
    - Update your `package.json` scripts
    - Set up the new build structure
 
-4. **Update your build/deploy scripts** (if any):
+5. **Update your build/deploy scripts** (if any):
    - Change `yarn build` to `yarn build:islands`
    - Change `yarn watch` to `yarn islands:watch`
 
-5. **Rebuild your islands**:
+6. **Rebuild your islands**:
    ```bash
    yarn build:islands
    ```
@@ -66,6 +78,9 @@ Version 1.0 replaces webpack with Vite for a faster, more modern build system.
 - 🚀 **Modern tooling** - built for ES modules and modern JavaScript
 
 ### Troubleshooting
+
+**Build fails with "@vitejs/plugin-react resolved to an ESM file"**:
+Add `"type": "module"` to your `package.json`. Vite's TypeScript config requires ESM support.
 
 **Build fails with "vite not found"**:
 ```bash
