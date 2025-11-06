@@ -1,6 +1,6 @@
 # IslandJS Rails — Turbo compatible JSX in seconds
 
-**Launch quickly:** *upgrade with vite only if necessary (MYAGNI).*
+**Launch quickly:** *upgrade with inertia only if necessary (MYAGNI).*
 
 [![CI](https://github.com/praxis-emergent/islandjs-rails/actions/workflows/github-actions-demo.yml/badge.svg)](https://github.com/praxis-emergent/islandjs-rails/actions/workflows/github-actions-demo.yml)
 [![Test Coverage](https://img.shields.io/badge/coverage-86.63%25-brightgreen.svg)](coverage/index.html)
