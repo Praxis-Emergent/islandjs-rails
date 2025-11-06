@@ -62,28 +62,11 @@ module IslandjsRails
     
     def install_vite_from_scratch!
       # No Vite yet, install everything
-      install_vite_rails_gem!
       create_base_vite_config!
       create_islands_vite_config!
       create_islands_entrypoint!
       setup_package_json!
       install_vite_dependencies!
-    end
-    
-    def install_vite_rails_gem!
-      gemfile_path = root_path.join('Gemfile')
-      return if gemfile_path.read.include?('vite_rails')
-      
-      puts "📦 Adding vite_rails to Gemfile..."
-      
-      # Add vite_rails gem
-      File.open(gemfile_path, 'a') do |f|
-        f.puts "\n# Vite for modern JavaScript bundling"
-        f.puts "gem 'vite_rails'"
-      end
-      
-      puts "  Running bundle install..."
-      system('bundle install')
     end
     
     def create_base_vite_config!
@@ -94,13 +77,11 @@ module IslandjsRails
       template = <<~TYPESCRIPT
         import { defineConfig } from 'vite'
         import react from '@vitejs/plugin-react'
-        import RubyPlugin from 'vite-plugin-ruby'
         import path from 'path'
         
         export default defineConfig({
           plugins: [
             react(),
-            RubyPlugin(),
           ],
           resolve: {
             alias: {
@@ -177,7 +158,6 @@ module IslandjsRails
       # Required Vite dependencies
       deps_to_install << 'vite@^5.4.19' unless dev_deps.key?('vite')
       deps_to_install << '@vitejs/plugin-react@^5.0.0' unless dev_deps.key?('@vitejs/plugin-react')
-      deps_to_install << 'vite-plugin-ruby@^5.1.1' unless dev_deps.key?('vite-plugin-ruby')
       
       if deps_to_install.any?
         puts "  Installing: #{deps_to_install.join(', ')}"

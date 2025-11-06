@@ -22,7 +22,8 @@ This release replaces webpack with Vite for a dramatically faster, more modern b
 
 **Dependencies**:
 - Removed: `webpack`, `webpack-cli`, `webpack-manifest-plugin`
-- Added: `vite`, `@vitejs/plugin-react`, `vite-plugin-ruby`
+- Added: `vite`, `@vitejs/plugin-react`
+- Note: Uses Vite directly via npm/yarn, not the `vite_rails` Ruby gem
 
 **Files**:
 - `app/javascript/islands/index.js` is no longer created (Vite uses entrypoints directly)
@@ -44,7 +45,7 @@ This release replaces webpack with Vite for a dramatically faster, more modern b
 - 📦 **Smaller bundle sizes** with superior tree-shaking
 - 🎯 **Simpler configuration** - no complex webpack setup needed
 - 🌐 **Modern tooling** - built for ES modules and modern JavaScript
-- 🔧 **Better Rails integration** via `vite_rails` gem
+- 🔧 **Lightweight integration** - uses Vite directly without additional Ruby dependencies
 
 ### 📚 Upgrade Guide
 

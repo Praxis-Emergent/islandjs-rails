@@ -11,7 +11,7 @@ module IslandjsRails
     
     # Check if Vite is already installed in the project
     def vite_installed?
-      vite_config_exists? || vite_json_exists? || vite_rails_gem_installed?
+      vite_config_exists? || vite_json_exists?
     end
     
     # Check if Inertia is installed
@@ -62,11 +62,6 @@ module IslandjsRails
     # Check if vite.json exists
     def vite_json_exists?
       vite_json_path.exist?
-    end
-    
-    # Check if vite_rails gem is installed
-    def vite_rails_gem_installed?
-      defined?(ViteRuby) || Gem.loaded_specs.key?('vite_rails')
     end
     
     # Check if inertia_rails gem is installed

@@ -49,8 +49,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rails", ">= 7.0", "< 9.0"
   spec.add_dependency "thor", "~> 1.0"
   
-  # Note: vite_rails is NOT a hard dependency
-  # IslandJS will install it if needed during rails islandjs:init
+  # Note: Vite is installed via npm/yarn, not as a Ruby gem
+  # IslandJS uses Vite directly through CLI commands
   
   # Development dependencies
   spec.add_development_dependency "rake", "~> 13.0"
