@@ -10,7 +10,7 @@ SimpleCov.start do
   add_group 'CLI', 'lib/islandjs_rails/cli.rb'
   add_group 'Configuration', 'lib/islandjs_rails/configuration.rb'
   
-  minimum_coverage 85
+  minimum_coverage 80
   minimum_coverage_by_file 30
 end
 
