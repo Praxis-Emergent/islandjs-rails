@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["ericarnold00+praxisemergent@gmail.com"]
 
   spec.summary       = "Simple, modern JavaScript islands for Rails"
-  spec.description   = "IslandJS Rails enables React and other JavaScript islands in Rails apps with zero webpack configuration. Load UMD libraries from CDNs, integrate with ERB partials, and render components with Turbo-compatible lifecycle management."
+  spec.description   = "IslandJS Rails enables React and other JavaScript islands in Rails apps with zero build configuration. Load UMD libraries from CDNs, integrate with ERB partials, and render components with Turbo-compatible lifecycle management."
   spec.homepage      = "https://github.com/praxis-emergent/islandjs-rails"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.0.0"
@@ -19,12 +19,13 @@ Gem::Specification.new do |spec|
 
   # Specify which files should be added to the gem when it is released.
   spec.files = Dir.chdir(__dir__) do
-    `git ls-files -z`.split("\x0").reject do |f|
-      (File.expand_path(f) == __FILE__) ||
+    Dir.glob("{lib,exe,templates}/**/*", File::FNM_DOTMATCH).reject do |f|
+      File.directory?(f) ||
+        (File.expand_path(f) == __FILE__) ||
         f.start_with?(*%w[bin/ test/ spec/ features/ .git .github .claude appveyor Gemfile]) ||
         f.match?(%r{\A(\.rspec|Rakefile)\z}) ||
         f.end_with?(".gem")
-    end
+    end + %w[README.md LICENSE.md CHANGELOG.md]
   end
   
   spec.bindir = "exe"
@@ -40,11 +41,16 @@ Gem::Specification.new do |spec|
 
         rails islandjs:init
     
+    This will set up Vite for Islands architecture alongside your existing setup.
+    
   MSG
 
   # Rails integration
   spec.add_dependency "rails", ">= 7.0", "< 9.0"
   spec.add_dependency "thor", "~> 1.0"
+  
+  # Note: Vite is installed via npm/yarn, not as a Ruby gem
+  # IslandJS uses Vite directly through CLI commands
   
   # Development dependencies
   spec.add_development_dependency "rake", "~> 13.0"

@@ -1,13 +1,13 @@
 # IslandJS Rails — Turbo compatible JSX in seconds
 
-**Launch quickly:** *upgrade with vite only if necessary (MYAGNI).*
+**Launch quickly:** *upgrade with inertia only if necessary (MYAGNI).*
 
 [![CI](https://github.com/praxis-emergent/islandjs-rails/actions/workflows/github-actions-demo.yml/badge.svg)](https://github.com/praxis-emergent/islandjs-rails/actions/workflows/github-actions-demo.yml)
 [![Test Coverage](https://img.shields.io/badge/coverage-86.63%25-brightgreen.svg)](coverage/index.html)
 [![RSpec Tests](https://img.shields.io/badge/tests-367%20passing-brightgreen.svg)](spec/)
 [![Rails 8 Ready](https://img.shields.io/badge/Rails%208-Ready-brightgreen.svg)](#rails-8-ready)
 
-IslandJS Rails supports the development of React islands in Rails apps by synchronizing `package.json` dependencies with UMD libraries served in `public/islands/vendor`.
+IslandJS Rails supports the development of React islands in Rails apps by synchronizing `package.json` dependencies with UMD libraries served in `public/vendor/islands`.
 
 Write Turbo compatible JSX in `app/javascript/islands/components/` and render it with a `react_component` helper in ERB templates (including Turbo Stream partials) — **Vue and other framework support can be added with a bit of work**.
 
@@ -30,14 +30,17 @@ rails islandjs:init
 ```
 
 ### Install React
+
+> **Note:** Currently limited to React 19.1.0 until [umd-react](https://github.com/lofcz/umd-react) workflow is fixed (PR pending) to publish newer versions to unpkg.com properly.
+
 ```bash
-rails "islandjs:install[react,19.2.0]"
-rails "islandjs:install[react-dom,19.2.0]"
+rails "islandjs:install[react,19.1.0]"
+rails "islandjs:install[react-dom,19.1.0]"
 ```
 
 ### Run Yarn In Development
 ```bash
-yarn watch
+yarn watch:islands
 ```
 
 ### Render React Components
@@ -53,7 +56,7 @@ yarn watch
 
 ### Build For Production
 ```bash
-yarn build # you may remove any stale islandjs bundles before committing
+yarn build:islands
 ```
 
 > 💡 **Turbo Cache Compatible**: React components automatically persist state across Turbo navigation! See [Turbo Cache Integration](#turbo-cache-integration) for details.
@@ -114,15 +117,15 @@ Modern Rails developers face a painful choice:
 
 ### The IslandJS Rails Solution
 ```bash
-# Instead of complex vite/webpack configuration:
-rails "islandjs:install[react,19.2.0]"
+# Instead of complex build configuration:
+rails "islandjs:install[react,19.1.0]"
 rails "islandjs:install[react-beautiful-dnd]"
 rails "islandjs:install[quill]"
 rails "islandjs:install[recharts]"
 rails "islandjs:install[lodash]"
 ```
 
-**Result**: Zero-to-no webpack configuration, instant prod builds, access to hundreds of UMD packages.
+**Result**: Zero build configuration, instant prod builds, access to hundreds of UMD packages.
 
 ### Access UMD installed JS packages via the window from within React components:
 ```bash
@@ -154,7 +157,7 @@ If you absolutely need a package that doesn't ship UMD builds, you have a few op
 - **Package.json Integration** - (npm + yarn)
 - **CDN Downloads** - Fetches UMD builds from unpkg.com and jsdelivr.net
 - **Rails Integration** - Serves auto-generated vendor UMD files for seamless integration
-- **Webpack Externals** - Updates webpack config to prevent duplicate bundling while allowing development in jsx or other formats
+- **Vite Externals** - Updates vite.config.islands.ts to prevent duplicate bundling while allowing development in jsx or other formats
 - **Placeholder Support** - Eliminate layout shift with automatic placeholder management ⚡ *New in v0.2.0*
 - **Flexible Architecture** - Compose and namespace libraries as needed
 
@@ -170,12 +173,12 @@ rails islandjs:init
 
 # Install packages (adds to package.json + saves to vendor directory)
 rails "islandjs:install[react]"
-rails "islandjs:install[react,19.2.0]"       # With specific version
+rails "islandjs:install[react,19.1.0]"       # With specific version
 rails "islandjs:install[lodash]"
 
 # Update packages (updates package.json + refreshes vendor files)
 rails "islandjs:update[react]"
-rails "islandjs:update[react,19.2.0]"       # To specific version
+rails "islandjs:update[react,19.1.0]"       # To specific version
 
 # Remove packages (removes from package.json + deletes vendor files)
 rails "islandjs:remove[react]"
@@ -201,7 +204,7 @@ rails islandjs:vendor:status
 ```
 
 **Vendor System Modes:**
-- **`:external_split`** (default): Each library served as separate file from `public/islands/vendor/`
+- **`:external_split`** (default): Each library served as separate file from `public/vendor/islands/`
 - **`:external_combined`**: All libraries concatenated into single bundle with cache-busting hash
 
 **Benefits of Vendor System:**
@@ -216,27 +219,24 @@ For development and building your JavaScript:
 
 ```bash
 # Development - watch for changes and rebuild automatically
-yarn watch
-# Or with npm: npm run watch
+yarn watch:islands
 
 # Production - build optimized bundle for deployment
-yarn build
-# Or with npm: npm run build
+yarn build:islands
 
 # Install dependencies (after adding packages via islandjs:install)
 yarn install
-# Or with npm: npm install
 ```
 
 **Development Workflow:**
-1. Run `yarn watch` (or `npm run watch`) in one terminal
+1. Run `yarn watch:islands` in one terminal
 2. Edit your components in `app/javascript/islands/components/`
-3. Changes are automatically compiled to `public/`
+3. Changes are automatically compiled and fingerprinted
 
 **Production Deployment:**
-1. Run `yarn build` (or `npm run build`) to create optimized bundle
-2. Commit the built assets: `git add public/islands_* && git add public/islands/*`
-3. Deploy with confidence - assets are prebuilt
+1. Run `yarn build:islands` to create optimized bundle with content hashing
+2. Commit the built assets: `git add public/islands/`
+3. Deploy - Vite's content hashing ensures automatic cache busting
 
 ## 📦 Working with Scoped Packages
 
@@ -313,21 +313,24 @@ function SolanaComponent() {
 export default SolanaComponent;
 ```
 
-### Webpack Externals
+### Vite Externals
 
-IslandJS Rails automatically configures webpack externals for scoped packages:
+IslandJS Rails automatically configures Vite externals for scoped packages:
 
-```javascript
-// webpack.config.js (auto-generated)
-module.exports = {
-  externals: {
-    // IslandJS Rails managed externals - do not edit manually
-    "@solana/web3.js": "solanaWeb3",
-    "react": "React",
-    "react-dom": "ReactDOM"
-  },
-  // ... rest of config
-};
+```typescript
+// vite.config.islands.ts (auto-generated)
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      external: ['@solana/web3.js'],
+      output: {
+        globals: {
+          '@solana/web3.js': 'solanaWeb3'
+        }
+      }
+    }
+  }
+});
 ```
 
 ### Troubleshooting Scoped Packages
@@ -354,7 +357,7 @@ rails "islandjs:install[@solana/web3]"     # ❌ Wrong
 | Command | What it does | Example |
 |---------|--------------|---------|
 | `install` | Adds package via yarn + downloads UMD + saves to vendor | `rails islandjs:install[react]` |
-| `update` | Updates package version + refreshes UMD | `rails islandjs:update[react,19.2.0]` |
+| `update` | Updates package version + refreshes UMD | `rails islandjs:update[react,19.1.0]` |
 | `remove` | Removes package via yarn + deletes vendor files | `rails islandjs:remove[react]` |
 | `clean` | Removes ALL vendor files (destructive!) | `rails islandjs:clean` |
 
@@ -366,15 +369,14 @@ IslandjsRails.configure do |config|
   # Directory for ERB partials (default: app/views/shared/islands)
   config.partials_dir = Rails.root.join('app/views/shared/islands')
   
-  # Webpack configuration path
-  config.webpack_config_path = Rails.root.join('webpack.config.js')
+  # Vite Islands configuration is at vite.config.islands.ts (auto-managed)
   
   # Vendor file delivery mode (default: :external_split)
   config.vendor_script_mode = :external_split    # One file per library
   # config.vendor_script_mode = :external_combined # Single combined bundle
   
-  # Vendor files directory (default: public/islands/vendor)
-  config.vendor_dir = Rails.root.join('public/islands/vendor')
+  # Vendor files directory (default: public/vendor/islands)
+  config.vendor_dir = Rails.root.join('public/vendor/islands')
   
   # Combined bundle filename base (default: 'islands-vendor')
   config.combined_basename = 'islands-vendor'
@@ -389,7 +391,7 @@ end
 ### Helpers
 
 #### `islands`
-Single helper that includes all UMD vendor scripts and your webpack bundle.
+Single helper that includes all UMD vendor scripts and your Vite bundle.
 
 ```erb
 <%= islands %>
@@ -397,7 +399,7 @@ Single helper that includes all UMD vendor scripts and your webpack bundle.
 
 This automatically loads:
 - All UMD libraries from vendor files (either split or combined mode)
-- Your webpack bundle
+- Your Vite bundle
 - Debug information in development
 
 #### `react_component(name, props, options, &block)`
@@ -482,10 +484,10 @@ Placeholders shine in Turbo Stream scenarios where content updates dynamically:
 <%= turbo_stream.replace "post_#{@post.id}_reactions" do %>
   <%= react_component("Reactions", { 
     postId: @post.id, 
-    initialCount: @post.reactions.count 
+    reactions: @post.reactions.as_json
   }) do %>
     <div class="reactions-placeholder" style="height: 32px;">
-      <span class="text-muted">Loading reactions...</span>
+      <span class="text-muted">Mounting/Rendering placeholder content goes here</span>
     </div>
   <% end %>
 <% end %>
@@ -606,18 +608,25 @@ window.islandjsRails = {
 const { React, UI, Utils } = window.islandjsRails;
 ```
 
-### Webpack Integration
+### Vite Integration
 
-IslandJS Rails automatically updates your webpack externals:
+IslandJS Rails automatically updates your Vite externals:
 
-```javascript
-// webpack.config.js (auto-generated)
-module.exports = {
-  externals: {
-    'react': 'React',
-    'lodash': '_'
+```typescript
+// vite.config.islands.ts (auto-generated)
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      external: ['react', 'react-dom'],
+      output: {
+        globals: {
+          'react': 'React',
+          'react-dom': 'ReactDOM'
+        }
+      }
+    }
   }
-};
+});
 ```
 
 ### Configuration Options
@@ -627,8 +636,7 @@ IslandjsRails.configure do |config|
   # Directory for ERB partials (default: app/views/shared/islands)
   config.partials_dir = Rails.root.join('app/views/shared/islands')
   
-  # Path to webpack config (default: webpack.config.js)
-  config.webpack_config_path = Rails.root.join('webpack.config.js')
+  # Vite Islands config is at vite.config.islands.ts (auto-managed)
   
   # Path to package.json (default: package.json)
   config.package_json_path = Rails.root.join('package.json')
@@ -637,8 +645,8 @@ IslandjsRails.configure do |config|
   config.vendor_script_mode = :external_split    # One file per library
   # config.vendor_script_mode = :external_combined # Single combined bundle
   
-  # Vendor files directory (default: public/islands/vendor)
-  config.vendor_dir = Rails.root.join('public/islands/vendor')
+  # Vendor files directory (default: public/vendor/islands)
+  config.vendor_dir = Rails.root.join('public/vendor/islands')
   
   # Combined bundle filename base (default: 'islands-vendor')
   config.combined_basename = 'islands-vendor'
@@ -665,11 +673,11 @@ end
 **Global name conflicts:**
 IslandJS Rails includes built-in mappings for common libraries. For packages with unusual global names, check the library's documentation or browser console to find the correct global variable name.
 
-**Webpack externals not updating:**
+**Vite externals not updating:**
 ```bash
 # Sync to update externals
 rails islandjs:sync
-
+```
 # Or clean and reinstall
 rails islandjs:clean
 rails islandjs:install[react]
@@ -734,6 +742,6 @@ Planned features for future releases:
 - **Fast Deploys**: CDN libraries cache globally
 
 ### 🎯 **Developer Experience**
-- **Zero Webpack Expertise**: Rails developers stay in Rails
+- **Zero Build Expertise**: Rails developers stay in Rails
 - **Turbo Compatible**: Seamless navigation and caching
 - **Progressive Enhancement**: Start with Hotwire, add React islands

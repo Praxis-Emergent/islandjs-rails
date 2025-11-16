@@ -57,13 +57,6 @@ RSpec.describe 'Final Coverage Tests' do
     describe '#setup_vendor_system!' do
       it 'creates vendor manifest and partial' do
         manifest_path = '/tmp/test_app/public/islands/vendor/manifest.json'
-        allow(File).to receive(:exist?).with(Pathname.new(manifest_path)).and_return(false)
-        allow(FileUtils).to receive(:mkdir_p)
-        allow(File).to receive(:write)
-        
-        vendor_manager = double('VendorManager')
-        allow(IslandjsRails).to receive(:vendor_manager).and_return(vendor_manager)
-        allow(vendor_manager).to receive(:send).with(:regenerate_vendor_partial!)
         
         expect { core.send(:setup_vendor_system!) }.not_to raise_error
       end
@@ -97,42 +90,29 @@ RSpec.describe 'Final Coverage Tests' do
     end
   end
 
-  describe 'Webpack and build methods' do
-    describe '#reset_webpack_externals' do
-      it 'resets webpack externals to empty' do
-        webpack_config_path = '/tmp/test_app/webpack.config.js'
-        webpack_content = "module.exports = {\n  externals: {\n    'react': 'React'\n  },\n  entry: './src/index.js'\n};"
+  describe 'Vite and build methods' do
+    describe '#update_vite_externals' do
+      it 'updates Vite externals with vendor packages' do
+        vite_config_path = '/tmp/test_app/vite.config.islands.ts'
+        vite_content = "export default defineConfig({\n  build: {\n    rollupOptions: {\n      external: [],\n      output: {\n        globals: {}\n      }\n    }\n  }\n})"
         
-        allow(File).to receive(:exist?).with(Pathname.new(webpack_config_path)).and_return(true)
-        allow(File).to receive(:read).with(Pathname.new(webpack_config_path)).and_return(webpack_content)
-        allow(File).to receive(:write)
-        
-        expect { core.send(:reset_webpack_externals) }.not_to raise_error
-      end
-
-      it 'does nothing when webpack config does not exist' do
-        webpack_config_path = '/tmp/test_app/webpack.config.js'
-        allow(File).to receive(:exist?).with(Pathname.new(webpack_config_path)).and_return(false)
-        
-        expect { core.send(:reset_webpack_externals) }.not_to raise_error
-      end
-    end
-
-    describe '#update_webpack_externals' do
-      it 'updates webpack externals with vendor packages' do
-        webpack_config_path = '/tmp/test_app/webpack.config.js'
-        webpack_content = "module.exports = {\n  externals: {},\n  entry: './src/index.js'\n};"
-        
-        allow(File).to receive(:exist?).with(Pathname.new(webpack_config_path)).and_return(true)
-        allow(File).to receive(:read).with(Pathname.new(webpack_config_path)).and_return(webpack_content)
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('vite.config.islands.ts')).and_return(vite_content)
         allow(File).to receive(:write)
         
         vendor_manager = double('VendorManager')
-        manifest = { 'libs' => [{ 'name' => 'react', 'global' => 'React' }] }
+        manifest = { 'libs' => [{ 'name' => 'react' }] }
         allow(IslandjsRails).to receive(:vendor_manager).and_return(vendor_manager)
         allow(vendor_manager).to receive(:send).with(:read_manifest).and_return(manifest)
+        allow(core).to receive(:get_global_name_for_package).with('react').and_return('React')
         
-        expect { core.send(:update_webpack_externals) }.not_to raise_error
+        expect { core.send(:update_vite_externals) }.not_to raise_error
+      end
+
+      it 'does nothing when vite config does not exist' do
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(false)
+        
+        expect { core.send(:update_vite_externals) }.not_to raise_error
       end
     end
   end

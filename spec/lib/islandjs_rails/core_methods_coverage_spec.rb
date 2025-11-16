@@ -154,10 +154,10 @@ RSpec.describe 'Core Methods Coverage Tests' do
 
       it 'includes devDependencies' do
         package_json_path = Pathname.new('/tmp/test_app/package.json')
-        allow(File).to receive(:read).with(package_json_path).and_return('{"dependencies": {"react": "^18.0.0"}, "devDependencies": {"webpack": "^5.0.0"}}')
+        allow(File).to receive(:read).with(package_json_path).and_return('{"dependencies": {"react": "^18.0.0"}, "devDependencies": {"vite": "^5.0.0"}}')
         
         result = core.send(:installed_packages)
-        expect(result).to include('react', 'webpack')
+        expect(result).to include('react', 'vite')
       end
     end
 
@@ -179,8 +179,10 @@ RSpec.describe 'Core Methods Coverage Tests' do
       it 'builds bundle successfully in production' do
         allow(ENV).to receive(:[]).with('NODE_ENV').and_return('production')
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn list webpack-cli > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn build').and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
+        allow(core).to receive(:system).with('yarn build:islands').and_return(true)
         
         result = core.send(:build_bundle!)
         expect(result).to be true
@@ -190,8 +192,10 @@ RSpec.describe 'Core Methods Coverage Tests' do
         allow(ENV).to receive(:[]).with('NODE_ENV').and_return('development')
         allow(ENV).to receive(:[]).with('RAILS_ENV').and_return('development')
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn list webpack-cli > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn build > /dev/null 2>&1').and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
+        allow(core).to receive(:system).with('yarn build:islands').and_return(true)
         
         result = core.send(:build_bundle!)
         expect(result).to be true
@@ -204,20 +208,20 @@ RSpec.describe 'Core Methods Coverage Tests' do
         expect(result).to be false
       end
 
-      it 'installs webpack-cli when missing' do
+      it 'checks for vite config before building' do
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn list webpack-cli > /dev/null 2>&1').and_return(false)
-        allow(core).to receive(:system).with('yarn add --dev webpack-cli@^5.1.4').and_return(true)
-        allow(core).to receive(:system).with('yarn build > /dev/null 2>&1').and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(false)
         
         result = core.send(:build_bundle!)
-        expect(result).to be true
+        expect(result).to be false
       end
 
       it 'returns false when build fails' do
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn list webpack-cli > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn build > /dev/null 2>&1').and_return(false)
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
+        allow(core).to receive(:system).with('yarn build:islands').and_return(false)
         
         result = core.send(:build_bundle!)
         expect(result).to be false
@@ -228,14 +232,14 @@ RSpec.describe 'Core Methods Coverage Tests' do
   describe 'Template and file creation methods' do
     describe '#copy_template_file' do
       it 'copies template file when it exists' do
-        template_path = '/gem/lib/templates/webpack.config.js'
-        destination_path = '/tmp/test_app/webpack.config.js'
+        template_path = '/gem/lib/templates/vite.config.islands.ts'
+        destination_path = '/tmp/test_app/vite.config.islands.ts'
         
         allow(File).to receive(:expand_path).and_return('/gem')
         allow(File).to receive(:exist?).with(template_path).and_return(true)
         allow(FileUtils).to receive(:cp)
         
-        core.send(:copy_template_file, 'webpack.config.js', destination_path)
+        core.send(:copy_template_file, 'vite.config.islands.ts', destination_path)
         expect(FileUtils).to have_received(:cp).with(template_path, destination_path)
       end
 

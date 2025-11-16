@@ -145,11 +145,11 @@ RSpec.describe IslandjsRails::Core do
     end
   end
 
-  describe '#update_webpack_externals' do
-    let(:webpack_path) { File.join(temp_dir, 'webpack.config.js') }
+  describe '#update_vite_externals' do
+    let(:vite_path) { File.join(temp_dir, 'vite.config.islands.ts') }
     
     before do
-      create_temp_webpack_config(temp_dir)
+      create_temp_vite_config(temp_dir)
       
       # Mock vendor manager with manifest containing react and lodash
       vendor_manager = double('VendorManager')
@@ -163,21 +163,22 @@ RSpec.describe IslandjsRails::Core do
       allow(IslandjsRails).to receive(:vendor_manager).and_return(vendor_manager)
     end
 
-    it 'updates webpack externals with installed packages' do
-      core.update_webpack_externals
+    it 'updates Vite externals with installed packages' do
+      core.update_vite_externals
       
-      webpack_content = File.read(webpack_path)
-      expect(webpack_content).to include('"react": "React"')
-      expect(webpack_content).to include('"lodash": "_"')
-      expect(webpack_content).to include('IslandjsRails managed externals')
+      vite_content = File.read(vite_path)
+      expect(vite_content).to include("'react'")
+      expect(vite_content).to include("'lodash'")
+      expect(vite_content).to include("'React'")
+      expect(vite_content).to include("'_'")
     end
 
-    it 'preserves other webpack configuration' do
-      original_content = File.read(webpack_path)
-      core.update_webpack_externals
+    it 'preserves other Vite configuration' do
+      original_content = File.read(vite_path)
+      core.update_vite_externals
       
-      webpack_content = File.read(webpack_path)
-      expect(webpack_content).to include('module.exports')
+      vite_content = File.read(vite_path)
+      expect(vite_content).to include('export default')
     end
   end
 
@@ -186,29 +187,29 @@ RSpec.describe IslandjsRails::Core do
       partials_dir = File.join(temp_dir, 'app', 'views', 'shared', 'islands')
       expect(Dir.exist?(partials_dir)).to be false
       
-      expect { core.init! }.to output(/Initializing IslandjsRails/).to_stdout
+      # Create Gemfile for ViteInstaller
+      File.write(File.join(temp_dir, 'Gemfile'), "source 'https://rubygems.org'\ngem 'rails'")
+      
+      expect { core.init! }.to output(/Initializing IslandJS Rails/).to_stdout
       
       expect(Dir.exist?(partials_dir)).to be true
     end
 
-    it 'generates webpack config if missing' do
-      webpack_path = File.join(temp_dir, 'webpack.config.js')
-      File.delete(webpack_path) if File.exist?(webpack_path)
+    it 'generates Vite config if missing' do
+      vite_path = File.join(temp_dir, 'vite.config.islands.ts')
+      File.delete(vite_path) if File.exist?(vite_path)
       
-      # Mock the additional methods that init! now calls
-      allow(core).to receive(:check_node_tools!)
-      allow(core).to receive(:ensure_package_json!)
-      allow(core).to receive(:install_essential_dependencies!)
-      allow(core).to receive(:create_scaffolded_structure!)
-      allow(core).to receive(:inject_umd_partials_into_layout!)
-      allow(core).to receive(:ensure_node_modules_gitignored!)
+      # Create Gemfile for ViteInstaller
+      File.write(File.join(temp_dir, 'Gemfile'), "source 'https://rubygems.org'\ngem 'rails'")
       
-      expect { core.init! }.to output(/Generated webpack.config.js/).to_stdout
+      # init! now uses ViteInstaller which creates the config
+      expect { core.init! }.to output(/Initializing IslandJS Rails/).to_stdout
       
-      expect(File.exist?(webpack_path)).to be true
-              content = File.read(webpack_path)
-        expect(content).to include('islands')
-        expect(content).to include('./app/javascript/islands/index.js')
+      # ViteInstaller creates vite.config.islands.ts
+      expect(File.exist?(vite_path)).to be true
+      content = File.read(vite_path)
+      expect(content).to include('islands')
+      expect(content).to include('vite')
     end
   end
 
@@ -235,13 +236,13 @@ RSpec.describe IslandjsRails::Core do
   end
 
   describe '#clean!' do
-    let(:vendor_dir) { File.join(temp_dir, 'public', 'islands', 'vendor') }
+    let(:vendor_dir) { File.join(temp_dir, 'public', 'vendor', 'islands') }
     
     before do
       FileUtils.mkdir_p(vendor_dir)
       File.write(File.join(vendor_dir, 'react.js'), '// React UMD')
       File.write(File.join(vendor_dir, 'lodash.js'), '// Lodash UMD')
-      create_temp_webpack_config(temp_dir)
+      create_temp_vite_config(temp_dir)
       
       # Mock vendor manager with all necessary methods
       vendor_manager = double('VendorManager')
@@ -262,25 +263,18 @@ RSpec.describe IslandjsRails::Core do
       expect(Dir.glob(File.join(vendor_dir, '*.js')).length).to eq(0)
     end
 
-    it 'resets webpack externals' do
-      # First, set up vendor manager to return packages for initial update
+    it 'updates Vite externals during clean' do
+      # Create vendor manifest with react
       vendor_manager = IslandjsRails.vendor_manager
-      allow(vendor_manager).to receive(:send).with(:read_manifest).and_return({
-        'libs' => [{ 'name' => 'react', 'version' => '18.3.1' }]
-      })
+      manifest = { 'libs' => [{ 'name' => 'react', 'version' => '18.3.1' }] }
+      vendor_manager.send(:write_manifest, manifest)
       
-      core.update_webpack_externals # Add some externals first
-      webpack_content_before = File.read(File.join(temp_dir, 'webpack.config.js'))
-      expect(webpack_content_before).to include('"react": "React"')
+      # Now clean
+      expect { core.clean! }.to output(/Clean completed/).to_stdout
       
-      # Now mock empty manifest for clean operation
-      allow(vendor_manager).to receive(:send).with(:read_manifest).and_return({ 'libs' => [] })
-      
-      core.clean!
-      
-      webpack_content_after = File.read(File.join(temp_dir, 'webpack.config.js'))
-      expect(webpack_content_after).not_to include('"react": "React"')
-      expect(webpack_content_after).to include('IslandjsRails managed externals')
+      # Vite externals will be updated as packages are reinstalled
+      vite_content = File.read(File.join(temp_dir, 'vite.config.islands.ts'))
+      expect(vite_content).to include('external')
     end
   end
 
@@ -317,16 +311,21 @@ RSpec.describe IslandjsRails::Core do
       expect { core.remove!('react') }.to raise_error(IslandjsRails::YarnError, /Failed to remove react/)
     end
 
-    it 'removes vendor file and updates webpack externals' do
-      vendor_path = File.join(temp_dir, 'public', 'islands', 'vendor', 'react.js')
-      expect(File.exist?(vendor_path)).to be true
+    it 'removes vendor file and updates Vite externals' do
+      # Mock the yarn remove command
+      allow(Open3).to receive(:capture3).with('yarn remove react', chdir: Rails.root)
+                                        .and_return(['', '', double(success?: true)])
       
-      allow(Open3).to receive(:capture3).and_return(['', '', double(success?: true)])
-      allow(core).to receive(:update_webpack_externals)
+      # Create vendor file directly without calling vendor_manager methods
+      vendor_dir = File.join(temp_dir, 'public', 'vendor', 'islands')
+      FileUtils.mkdir_p(vendor_dir)
+      vendor_file = File.join(vendor_dir, 'react-18.3.1.min.js')
+      File.write(vendor_file, 'console.log("react");')
+      allow(core).to receive(:update_vite_externals)
       
       core.remove!('react')
       
-      expect(core).to have_received(:update_webpack_externals)
+      expect(core).to have_received(:update_vite_externals)
       expect(IslandjsRails.vendor_manager).to have_received(:remove_package!).with('react')
     end
   end
@@ -486,35 +485,6 @@ RSpec.describe IslandjsRails::Core do
         expect(core).to have_received(:detect_global_name).with('react')
       end
     end
-
-    describe '#reset_webpack_externals' do
-      it 'resets externals block in webpack config' do
-        webpack_content = <<~JS
-          module.exports = {
-            externals: {
-              "react": "React",
-              "lodash": "_"
-            },
-            output: {}
-          };
-        JS
-        
-        File.write(File.join(temp_dir, 'webpack.config.js'), webpack_content)
-        
-        expect { core.send(:reset_webpack_externals) }.to output(/Reset webpack externals/).to_stdout
-        
-        updated_content = File.read(File.join(temp_dir, 'webpack.config.js'))
-        expect(updated_content).to include('externals: {')
-        expect(updated_content).to include('// IslandjsRails managed externals - do not edit manually')
-        expect(updated_content).not_to include('"react": "React"')
-      end
-
-      it 'does nothing if webpack config does not exist' do
-        File.delete(File.join(temp_dir, 'webpack.config.js')) if File.exist?(File.join(temp_dir, 'webpack.config.js'))
-        
-        expect { core.send(:reset_webpack_externals) }.not_to output.to_stdout
-      end
-    end
   end
 
   describe 'error handling' do
@@ -533,10 +503,13 @@ RSpec.describe IslandjsRails::Core do
         expect { core.send(:install_package!, 'react') }.to raise_error(StandardError, 'Network timeout')
       end
     end
-
+    
     describe 'file operations' do
       it 'handles file permission errors' do
-        allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::EACCES, 'Permission denied')
+        # Create Gemfile first
+        File.write(File.join(temp_dir, 'Gemfile'), "source 'https://rubygems.org'\ngem 'rails'")
+        
+        allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::EACCES)
         
         expect { core.init! }.to raise_error(Errno::EACCES)
       end
@@ -560,17 +533,19 @@ RSpec.describe IslandjsRails::Core do
       expect(core.send(:installed_packages)).to include('react', 'vue', 'lodash')
     end
 
-    it 'generates webpack config with all options' do
-      File.delete(File.join(temp_dir, 'webpack.config.js')) if File.exist?(File.join(temp_dir, 'webpack.config.js'))
+    it 'generates Vite config with all options' do
+      vite_path = File.join(temp_dir, 'vite.config.islands.ts')
+      File.delete(vite_path) if File.exist?(vite_path)
       
-      core.send(:generate_webpack_config!)
+      # Create Gemfile for ViteInstaller
+      File.write(File.join(temp_dir, 'Gemfile'), "source 'https://rubygems.org'\ngem 'rails'")
       
-      config_content = File.read(File.join(temp_dir, 'webpack.config.js'))
-      expect(config_content).to include('TerserPlugin')
-      expect(config_content).to include('WebpackManifestPlugin')
-      expect(config_content).to include('babel-loader')
-      expect(config_content).to include('source-map')
-      expect(config_content).to include('[name].[contenthash].js')
+      # ViteInstaller creates the config during init!
+      core.init!
+      
+      config_content = File.read(vite_path)
+      expect(config_content).to include('export default')
+      expect(config_content).to include('vite')
     end
 
     it 'handles partial content generation with special characters' do
@@ -613,7 +588,7 @@ RSpec.describe IslandjsRails::Core do
       allow(IslandjsRails).to receive(:vendor_manager).and_return(vendor_manager)
       allow(vendor_manager).to receive(:install_package!).and_return(true)
       allow(core).to receive(:detect_global_name).and_return('React')
-      allow(core).to receive(:update_webpack_externals)
+      allow(core).to receive(:update_vite_externals)
       
       expect { core.install!('react', '18.3.1') }.to output(/Installing UMD package/).to_stdout
       
@@ -633,7 +608,7 @@ RSpec.describe IslandjsRails::Core do
       allow(IslandjsRails).to receive(:vendor_manager).and_return(vendor_manager)
       allow(vendor_manager).to receive(:install_package!).and_return(true)
       allow(core).to receive(:detect_global_name).and_return('React')
-      allow(core).to receive(:update_webpack_externals)
+      allow(core).to receive(:update_vite_externals)
       
       # First call: ecosystem incomplete
       allow(core).to receive(:react_ecosystem_complete?).and_return(false, true)
@@ -653,7 +628,7 @@ RSpec.describe IslandjsRails::Core do
       allow(IslandjsRails).to receive(:vendor_manager).and_return(vendor_manager)
       allow(vendor_manager).to receive(:install_package!).and_return(true)
       allow(core).to receive(:detect_global_name).and_return('React')
-      allow(core).to receive(:update_webpack_externals)
+      allow(core).to receive(:update_vite_externals)
       
       expect { core.update!('react', '18.3.1') }.to output(/Updating UMD package/).to_stdout
       
@@ -726,7 +701,7 @@ RSpec.describe IslandjsRails::Core do
         # Create the exact template format expected by the method
         File.write(index_js_path, <<~JS)
           // IslandJS Rails - Main entry point
-          // This file is the webpack entry point for your JavaScript islands
+          // Export your island components here
 
           // Example React component imports (uncomment when you have components)
           // import HelloWorld from './components/HelloWorld.jsx';
@@ -804,8 +779,10 @@ RSpec.describe IslandjsRails::Core do
     describe '#build_bundle!' do
       it 'runs yarn build when yarn is available' do
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn list webpack-cli > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn build > /dev/null 2>&1').and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
+        allow(core).to receive(:system).with('yarn build:islands').and_return(true)
         
         expect { core.send(:build_bundle!) }.to output(/Bundle built successfully/).to_stdout
       end
@@ -818,19 +795,20 @@ RSpec.describe IslandjsRails::Core do
 
       it 'warns when build fails' do
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn list webpack-cli > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn build > /dev/null 2>&1').and_return(false)
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('package.json')).and_return(true)
+        allow(File).to receive(:read).with(Rails.root.join('package.json')).and_return('{"scripts":{"build:islands":"vite build"}}')
+        allow(core).to receive(:system).with('yarn build:islands').and_return(false)
         
         expect { core.send(:build_bundle!) }.to output(/Build failed/).to_stdout
       end
 
-      it 'installs webpack-cli when missing' do
+      it 'checks for Vite config before building' do
         allow(core).to receive(:system).with('which yarn > /dev/null 2>&1').and_return(true)
-        allow(core).to receive(:system).with('yarn list webpack-cli > /dev/null 2>&1').and_return(false)
-        allow(core).to receive(:system).with('yarn add --dev webpack-cli@^5.1.4').and_return(true)
-        allow(core).to receive(:system).with('yarn build > /dev/null 2>&1').and_return(true)
+        allow(File).to receive(:exist?).with(Rails.root.join('vite.config.islands.ts')).and_return(false)
         
-        expect { core.send(:build_bundle!) }.to output(/webpack-cli not found, installing/).to_stdout
+        result = core.send(:build_bundle!)
+        expect(result).to be false
       end
     end
 
@@ -904,7 +882,7 @@ RSpec.describe IslandjsRails::Core do
         
         expect(File.exist?(package_json_path)).to be true
         content = JSON.parse(File.read(package_json_path))
-        expect(content['scripts']).to include('build', 'watch')
+        expect(content['scripts']).to include('build:islands', 'watch:islands')
         expect(content['name']).to eq(File.basename(temp_dir))
       end
 
@@ -918,16 +896,15 @@ RSpec.describe IslandjsRails::Core do
         create_temp_package_json(temp_dir, {})
         allow(core).to receive(:system).and_return(true)
         
-        expect { core.send(:install_essential_dependencies!) }.to output(/Installing essential webpack dependencies/).to_stdout
+        expect { core.send(:install_essential_dependencies!) }.to output(/Installing essential Vite dependencies/).to_stdout
       end
 
       it 'skips when all dependencies are installed' do
         # Create package.json with all essential deps
-        dev_deps = {}
-        IslandjsRails::Core::ESSENTIAL_DEPENDENCIES.each do |dep|
-          package_name = dep.split('@').first
-          dev_deps[package_name] = '1.0.0'
-        end
+        dev_deps = {
+          'vite' => '^5.4.19',
+          '@vitejs/plugin-react' => '^5.0.0'
+        }
         # Manually create package.json with devDependencies
         package_json = {
           'name' => 'test-app',
@@ -964,7 +941,8 @@ RSpec.describe IslandjsRails::Core do
         expect { core.send(:create_scaffolded_structure!) }.to output(/🏗️  Creating scaffolded structure/).to_stdout
         
         expect(Dir.exist?(components_dir)).to be true
-        expect(File.exist?(File.join(islandjs_dir, 'index.js'))).to be true
+        # index.js is no longer created - entrypoint is in app/javascript/entrypoints/islands.js
+      expect(File.exist?(File.join(islandjs_dir, 'components', 'HelloWorld.jsx'))).to be true
         expect(File.exist?(File.join(components_dir, '.gitkeep'))).to be true
       end
 

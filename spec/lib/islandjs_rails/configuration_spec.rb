@@ -14,7 +14,6 @@ RSpec.describe IslandjsRails::Configuration do
       
       expect(config.package_json_path).to eq(Pathname.new(temp_dir).join('package.json'))
       expect(config.partials_dir).to eq(Pathname.new(temp_dir).join('app', 'views', 'shared', 'islands'))
-      expect(config.webpack_config_path).to eq(Pathname.new(temp_dir).join('webpack.config.js'))
       expect(config.supported_cdns).to include('https://unpkg.com', 'https://cdn.jsdelivr.net/npm')
       # Global name overrides are now handled by built-in constant, not configuration
     end
@@ -61,7 +60,6 @@ RSpec.describe IslandjsRails::Configuration do
       
       expect(config.package_json_path).to be_a(Pathname)
       expect(config.partials_dir).to be_a(Pathname)
-      expect(config.webpack_config_path).to be_a(Pathname)
     end
 
     it 'handles custom Rails root' do

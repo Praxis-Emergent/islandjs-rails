@@ -12,67 +12,14 @@ module IslandjsRails
       @configuration = IslandjsRails.configuration
     end
 
-    # Essential dependencies for IslandJS webpack setup
-    ESSENTIAL_DEPENDENCIES = [
-      'webpack@^5.88.2',
-      'webpack-cli@^5.1.4', 
-      'terser-webpack-plugin@^5.3.14',
-      'webpack-manifest-plugin@^5.0.1',
-      'babel-loader@^9.1.3',
-      '@babel/core@^7.23.0',
-      '@babel/preset-env@^7.23.0',
-      '@babel/preset-react@^7.23.0'
-    ].freeze
+    # No longer needed - Vite handles bundling
 
     # Initialize IslandJS in a Rails project
     def init!
-      puts "🚀 Initializing IslandjsRails..."
-      
-      # Step 1: Check for required tools
-      check_node_tools!
-      
-      # Step 2: Ensure package.json exists
-      ensure_package_json!
-      
-      # Step 3: Install essential webpack dependencies
-      install_essential_dependencies!
-      
-      # Step 4: Create scaffolded structure
-      create_scaffolded_structure!
-      
-      # Step 5: Create directories
-      FileUtils.mkdir_p(configuration.partials_dir)
-      FileUtils.mkdir_p(configuration.vendor_dir)
-      puts "✓ Created #{configuration.partials_dir}"
-      puts "✓ Created #{configuration.vendor_dir}"
-      
-      # Step 6: Generate webpack config if it doesn't exist
-      unless File.exist?(configuration.webpack_config_path)
-        generate_webpack_config!
-        puts "✓ Generated webpack.config.js"
-      else
-        puts "✓ webpack.config.js already exists"
-      end
-      
-      # Step 7: Set up vendor system and inject into layout
-      setup_vendor_system!
-      inject_islands_helper_into_layout!
-      
-      # Step 8: Add node_modules to .gitignore
-      ensure_node_modules_gitignored!
-      
-      puts "\n🎉 IslandjsRails initialized successfully!"
-      puts "\n📋 Next steps:"
-      puts "1. Install libraries:  rails \"islandjs:install[react,19.2.0]\""
-      puts "                       rails \"islandjs:install[react-dom,19.2.0]\"  "
-      puts "2. Start dev:          yarn watch"
-      puts "3. Use components:     <%= react_component('HelloWorld') %>"
-      puts "4. Build for prod:     yarn build"
-      puts "5. Commit assets:      git add public/islands_* && git add public/islands/*"
-  
-      puts "\n🚀 Rails 8 Ready: Commit your built assets for bulletproof deploys!"
-      puts "💡 IslandjsRails is framework-agnostic - use React, Vue, or any UMD library!"
-      puts "🎉 Ready to build!"
+      # Use new Vite-based installer
+      require_relative 'vite_installer'
+      installer = ViteInstaller.new
+      installer.install!
     end
 
     # Install a new island package
@@ -92,7 +39,7 @@ module IslandjsRails
       return false unless success
       
       global_name = detect_global_name(package_name)
-      update_webpack_externals(package_name, global_name)
+      update_vite_externals(package_name, global_name)
       
       puts "✅ Successfully installed #{package_name}!"
       
@@ -118,9 +65,9 @@ module IslandjsRails
       vendor_manager = IslandjsRails.vendor_manager
       vendor_manager.install_package!(package_name, version)
       
-      # Update webpack externals
+      # Update Vite externals
       global_name = detect_global_name(package_name)
-      update_webpack_externals(package_name, global_name)
+      update_vite_externals(package_name, global_name)
       
       puts "✅ Successfully updated #{package_name}!"
     end
@@ -139,7 +86,7 @@ module IslandjsRails
       vendor_manager = IslandjsRails.vendor_manager
       vendor_manager.remove_package!(package_name)
       
-      update_webpack_externals
+      update_vite_externals
       puts "✅ Successfully removed #{package_name}!"
     end
 
@@ -165,9 +112,9 @@ module IslandjsRails
         # Install to vendor system
         vendor_manager.install_package!(package_name, version)
         
-        # Update webpack externals
+        # Update Vite externals
         global_name = detect_global_name(package_name)
-        update_webpack_externals(package_name, global_name)
+        update_vite_externals(package_name, global_name)
       end
       
       puts "✅ Sync completed!"
@@ -220,16 +167,15 @@ module IslandjsRails
     vendor_manager.send(:regenerate_vendor_partial!)
     puts "  ✓ Regenerated vendor partial"
     
-    # Reset webpack externals
-    reset_webpack_externals
-    puts "  ✓ Reset webpack externals"
+    # Vite externals will be updated as packages are reinstalled
+    puts "  ✓ Vite externals will be updated as packages are reinstalled"
     
     # Reinstall all packages from package.json
     installed_packages.each do |package_name, version|
       puts "  📦 Reinstalling #{package_name}@#{version}..."
       vendor_manager.install_package!(package_name, version)
       global_name = detect_global_name(package_name)
-      update_webpack_externals(package_name, global_name)
+      update_vite_externals(package_name, global_name)
     end
     
     puts "✅ Clean completed!"
@@ -347,7 +293,7 @@ module IslandjsRails
       File.exist?(partial_path_for(package_name))
     end
     
-    # Get global name for a package (used by webpack externals)
+    # Get global name for a package (used by Vite externals)
     def get_global_name_for_package(package_name)
       detect_global_name(package_name)
     end

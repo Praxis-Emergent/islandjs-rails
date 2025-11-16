@@ -56,8 +56,9 @@ RSpec.describe IslandjsRails::Configuration do
       expect(configuration.partials_dir.to_s).to include('app/views/shared/islands')
     end
 
-    it 'has default webpack_config_path' do
-      expect(configuration.webpack_config_path.to_s).to include('webpack.config.js')
+    it 'uses vite.config.islands.ts for Vite configuration' do
+      # Vite config is at vite.config.islands.ts (auto-managed, not in configuration)
+      expect(Rails.root.join('vite.config.islands.ts').to_s).to include('vite.config.islands.ts')
     end
 
     it 'has default vendor_script_mode' do

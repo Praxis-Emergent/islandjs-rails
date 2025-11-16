@@ -57,7 +57,7 @@ namespace :islandjs do
     IslandjsRails.status!
   end
 
-  desc "Clean all island partials and reset webpack externals"
+  desc "Clean all island partials and reset Vite externals"
   task :clean => :environment do
     IslandjsRails.clean!
   end
@@ -69,7 +69,7 @@ namespace :islandjs do
     puts "=" * 40
     puts "Package.json path: #{config.package_json_path}"
     puts "Partials directory: #{config.partials_dir}"
-    puts "Webpack config path: #{config.webpack_config_path}"
+    puts "Vite Islands config: vite.config.islands.ts"
     puts "Supported CDNs: #{config.supported_cdns.join(', ')}"
     puts "Built-in global name overrides: #{IslandjsRails::BUILT_IN_GLOBAL_NAME_OVERRIDES.size} available"
   end

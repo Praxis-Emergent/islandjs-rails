@@ -32,7 +32,7 @@ module IslandjsRails
       IslandjsRails.status!
     end
 
-    desc "clean", "Clean all island partials and reset webpack externals"
+    desc "clean", "Clean all island partials and reset Vite externals"
     def clean
       IslandjsRails.clean!
     end
@@ -44,7 +44,7 @@ module IslandjsRails
       puts "=" * 40
       puts "Package.json path: #{config.package_json_path}"
       puts "Partials directory: #{config.partials_dir}"
-      puts "Webpack config path: #{config.webpack_config_path}"
+      puts "Vite Islands config: vite.config.islands.ts"
       puts "Supported CDNs: #{config.supported_cdns.join(', ')}"
       puts "Built-in global name overrides: #{IslandjsRails::BUILT_IN_GLOBAL_NAME_OVERRIDES.size} available"
     end
