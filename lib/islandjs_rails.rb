@@ -61,10 +61,6 @@ module IslandjsRails
     'zepto' => '$',
     'date-fns' => 'dateFns',
     
-    # Frameworks
-    'vue' => 'Vue',
-    'angular' => 'ng',
-    
     # Blockchain
     '@solana/web3.js' => 'solanaWeb3',
     'web3' => 'Web3',

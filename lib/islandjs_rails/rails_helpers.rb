@@ -154,40 +154,13 @@ module IslandjsRails
       html_safe_string("#{container_html}\n#{mount_script}")
     end
 
-    # Mount a Vue component with props and Turbo-compatible lifecycle  
-    def vue_component(component_name, props = {}, options = {})
-      # Generate unique ID for this component instance
-      component_id = "vue-#{component_name.downcase}-#{SecureRandom.hex(4)}"
-      
-      # Prepare props as JSON
-      props_json = props.to_json
-      
-      # Extract options
-      tag_name = options[:tag] || 'div'
-      css_class = options[:class] || ''
-
-      # Extract script attributes from options
-      script_attributes = options.slice(*SCRIPT_ATTRIBUTES)
-      script_attributes.compact!
-
-      # Generate the mounting script
-      mount_script = generate_vue_mount_script(component_name, component_id, props_json, **script_attributes)
-      
-      # Return the container div and script
-      container_html = "<#{tag_name} id=\"#{component_id}\" class=\"#{css_class}\"></#{tag_name}>"
-      
-      html_safe_string("#{container_html}\n#{mount_script}")
-    end
-
-    # Generic island component helper
+    # Generic island component helper (currently only supports React)
     def island_component(framework, component_name, props = {}, options = {})
       case framework.to_s.downcase
       when 'react'
         react_component(component_name, props, options)
-      when 'vue'
-        vue_component(component_name, props, options)
       else
-        html_safe_string("<!-- Unsupported framework: #{framework} -->")
+        html_safe_string("<!-- Unsupported framework: #{framework}. Only React is currently supported. -->")
       end
     end
 
@@ -423,82 +396,6 @@ module IslandjsRails
             // Legacy Turbolinks compatibility
             document.addEventListener('turbolinks:load', mount#{component_name});
             document.addEventListener('turbolinks:before-cache', cleanup#{component_name});
-          })();
-        </script>
-      JAVASCRIPT
-    end
-
-    # Generate Vue component mounting script with Turbo compatibility
-    def generate_vue_mount_script(component_name, component_id, props_json, **attributes)
-      html_attributes = script_html_attributes(**attributes)
-
-      <<~JAVASCRIPT
-        <script#{html_attributes}>
-          (function() {
-            let vueApp = null;
-            
-            function mount#{component_name}() {
-              if (typeof window.islandjsRails === 'undefined' || !window.islandjsRails.#{component_name}) {
-                console.warn('IslandJS: #{component_name} component not found. Make sure it\\'s exported in your bundle.');
-                return;
-              }
-              
-              if (typeof Vue === 'undefined') {
-                console.warn('IslandJS: Vue not loaded. Install with: rails "islandjs:install[vue]"');
-                return;
-              }
-              
-              const container = document.getElementById('#{component_id}');
-              if (!container) return;
-              
-              const props = #{props_json};
-              
-              // Vue 3 syntax
-              if (Vue.createApp) {
-                vueApp = Vue.createApp({
-                  render() {
-                    return Vue.h(window.islandjsRails.#{component_name}, props);
-                  }
-                });
-                vueApp.mount('##{component_id}');
-              } else {
-                // Vue 2 syntax
-                vueApp = new Vue({
-                  el: '##{component_id}',
-                  render: function(h) {
-                    return h(window.islandjsRails.#{component_name}, { props: props });
-                  }
-                });
-              }
-            }
-            
-            function unmount#{component_name}() {
-              if (vueApp) {
-                if (vueApp.unmount) {
-                  // Vue 3
-                  vueApp.unmount();
-                } else if (vueApp.$destroy) {
-                  // Vue 2
-                  vueApp.$destroy();
-                }
-                vueApp = null;
-              }
-            }
-            
-            // Mount on page load and Turbo navigation
-            if (document.readyState === 'loading') {
-              document.addEventListener('DOMContentLoaded', mount#{component_name});
-            } else {
-              mount#{component_name}();
-            }
-            
-            // Turbo compatibility
-            document.addEventListener('turbo:load', mount#{component_name});
-            document.addEventListener('turbo:before-cache', unmount#{component_name});
-            
-            // Legacy Turbolinks compatibility
-            document.addEventListener('turbolinks:load', mount#{component_name});
-            document.addEventListener('turbolinks:before-cache', unmount#{component_name});
           })();
         </script>
       JAVASCRIPT

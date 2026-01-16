@@ -143,7 +143,7 @@ RSpec.describe "Islandjs Rake Tasks" do
         .and(including("Partials directory: /path/to/partials"))
         .and(including("Vite Islands config: vite.config.islands.ts"))
         .and(including("Supported CDNs: https://unpkg.com"))
-        .and(including("Built-in global name overrides: 16 available"))
+        .and(including("Built-in global name overrides: 14 available"))
       ).to_stdout
     end
   end

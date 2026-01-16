@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Eric Arnold"]
   spec.email         = ["ericarnold00+praxisemergent@gmail.com"]
 
-  spec.summary       = "Simple, modern JavaScript islands for Rails"
-  spec.description   = "IslandJS Rails enables React and other JavaScript islands in Rails apps with zero build configuration. Load UMD libraries from CDNs, integrate with ERB partials, and render components with Turbo-compatible lifecycle management."
+  spec.summary       = "Simple, modern React islands for Rails"
+  spec.description   = "IslandJS Rails enables React islands in Rails apps with zero build configuration. Load UMD libraries from CDNs, integrate with ERB partials, and render components with Turbo-compatible lifecycle management."
   spec.homepage      = "https://github.com/praxis-emergent/islandjs-rails"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.0.0"
@@ -58,4 +58,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "webmock", "~> 3.0"
   spec.add_development_dependency "vcr", "~> 6.0"
   spec.add_development_dependency "simplecov", "~> 0.22"
+  
+  # Ruby 4.0+ extracted these from stdlib
+  spec.add_development_dependency "cgi"
 end 

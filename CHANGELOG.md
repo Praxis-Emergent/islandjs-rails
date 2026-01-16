@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-16
+
+### Removed
+- **Vue Support**: Removed untested Vue framework support to keep the gem focused on battle-tested React integration
+  - Removed `vue_component` helper method
+  - Removed `generate_vue_mount_script` private method
+  - Removed Vue global name mapping from `BUILT_IN_GLOBAL_NAME_OVERRIDES`
+  - Updated `island_component` helper to only support React
+  - Updated documentation to reflect React-only focus
+
+### Changed
+- Updated gem description to reflect React-only focus
+- Simplified framework support messaging in error messages
+
+### Fixed
+- **Ruby 4.0 Compatibility**: Added explicit `cgi` gem dependency for test suite compatibility
+  - Ruby 4.0+ extracted `cgi` from stdlib, causing VCR gem to fail
+  - Added `cgi` as development dependency to ensure test suite works on Ruby 4.0+
+
 ## [1.0.0] - 2025-11-05
 
 ### 🎉 Major Release: Webpack → Vite Migration
@@ -86,7 +105,7 @@ See [UPGRADING.md](UPGRADING.md) for detailed migration instructions. Summary:
 
 ### Added
 - **CSP support for script tags**: All IslandJS-generated `<script>` tags now automatically include a CSP nonce when one is present in the Rails request.  
-- **Flexible script attributes**: Helpers (`react_component`, `vue_component`, etc.) now support passing standard script attributes (`nonce`, `defer`, `async`, `crossorigin`, `integrity`).
+- **Flexible script attributes**: Helpers (`react_component`, etc.) now support passing standard script attributes (`nonce`, `defer`, `async`, `crossorigin`, `integrity`).
 
 ## [0.4.0] - 2025-08-10
 
