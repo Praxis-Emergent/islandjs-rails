@@ -11,13 +11,13 @@ module IslandjsRails
       end
       
       # Check if vite.config.islands.ts exists
-      unless File.exist?(Rails.root.join('vite.config.islands.ts'))
+      unless File.exist?(root_path.join('vite.config.islands.ts'))
         puts "⚠️  vite.config.islands.ts not found. Run: rails islandjs:init"
         return false
       end
       
       # Determine which build script to use based on package.json
-      package_json_path = Rails.root.join('package.json')
+      package_json_path = root_path.join('package.json')
       build_cmd = 'yarn build'
       
       if File.exist?(package_json_path)
@@ -482,7 +482,8 @@ module IslandjsRails
       
       begin
         @package_json = JSON.parse(File.read(configuration.package_json_path))
-      rescue JSON::ParserError
+      rescue JSON::ParserError => e
+        puts "⚠️  Warning: Failed to parse package.json: #{e.message}"
         nil
       end
     end
@@ -530,10 +531,10 @@ module IslandjsRails
       package_spec = version ? "#{package_name}@#{version}" : package_name
       command = "yarn add #{package_spec}"
       
-      stdout, stderr, status = Open3.capture3(command, chdir: defined?(Rails) ? Rails.root : Dir.pwd)
+      stdout, stderr, status = Open3.capture3(command, chdir: root_path)
       
       unless status.success?
-        raise YarnError, "Failed to add #{package_spec}: #{stderr}"
+        raise IslandjsRails::YarnError, "Failed to add #{package_spec}: #{stderr}"
       end
       
       @package_json = nil
@@ -545,10 +546,10 @@ module IslandjsRails
         add_package_via_yarn(package_name, version)
       else
         command = "yarn upgrade #{package_name}"
-        stdout, stderr, status = Open3.capture3(command, chdir: defined?(Rails) ? Rails.root : Dir.pwd)
+        stdout, stderr, status = Open3.capture3(command, chdir: root_path)
         
         unless status.success?
-          raise YarnError, "Failed to update #{package_name}: #{stderr}"
+          raise IslandjsRails::YarnError, "Failed to update #{package_name}: #{stderr}"
         end
         
         @package_json = nil
@@ -559,10 +560,10 @@ module IslandjsRails
     def remove_package_via_yarn(package_name)
       command = "yarn remove #{package_name}"
       
-      stdout, stderr, status = Open3.capture3(command, chdir: defined?(Rails) ? Rails.root : Dir.pwd)
+      stdout, stderr, status = Open3.capture3(command, chdir: root_path)
       
       unless status.success?
-        raise YarnError, "Failed to remove #{package_name}: #{stderr}"
+        raise IslandjsRails::YarnError, "Failed to remove #{package_name}: #{stderr}"
       end
       
       @package_json = nil
@@ -625,7 +626,7 @@ module IslandjsRails
     # No longer needed - Vite externals are in vite.config.islands.ts
 
     def update_vite_externals(package_name = nil, global_name = nil)
-      vite_config_path = Rails.root.join('vite.config.islands.ts')
+      vite_config_path = root_path.join('vite.config.islands.ts')
       return unless File.exist?(vite_config_path)
       
       content = File.read(vite_config_path)
@@ -665,6 +666,12 @@ module IslandjsRails
       
       File.write(vite_config_path, updated_content)
       puts "  ✓ Updated Vite externals in vite.config.islands.ts"
+    end
+    
+    private
+
+    def root_path
+      defined?(Rails) && Rails.respond_to?(:root) ? Rails.root : Pathname.new(Dir.pwd)
     end
   end
 end

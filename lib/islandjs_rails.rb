@@ -5,7 +5,6 @@ require_relative "islandjs_rails/core"
 require_relative "islandjs_rails/vendor_manager"
 require_relative "islandjs_rails/cli"
 
-# Conditionally require Rails-specific components
 if defined?(Rails)
   require_relative "islandjs_rails/railtie"
   require_relative "islandjs_rails/rails_helpers"

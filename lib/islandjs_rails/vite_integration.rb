@@ -79,7 +79,8 @@ module IslandjsRails
       return {} unless islands_manifest_path.exist?
       
       JSON.parse(islands_manifest_path.read)
-    rescue JSON::ParserError
+    rescue JSON::ParserError => e
+      puts "⚠️  Warning: Failed to parse Islands manifest: #{e.message}"
       {}
     end
     
@@ -103,7 +104,8 @@ module IslandjsRails
       return {} unless package_json_exists?
       
       JSON.parse(root_path.join('package.json').read)
-    rescue JSON::ParserError
+    rescue JSON::ParserError => e
+      puts "⚠️  Warning: Failed to parse package.json: #{e.message}"
       {}
     end
     

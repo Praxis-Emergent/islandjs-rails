@@ -12,12 +12,9 @@ module IslandjsRails
       @configuration = IslandjsRails.configuration
     end
 
-    # No longer needed - Vite handles bundling
-
-    # Initialize IslandJS in a Rails project
     def init!
-      # Use new Vite-based installer
       require_relative 'vite_installer'
+
       installer = ViteInstaller.new
       installer.install!
     end
@@ -191,7 +188,10 @@ module IslandjsRails
         dev_dependencies = package_data.dig('devDependencies') || {}
         
         dependencies.key?(package_name) || dev_dependencies.key?(package_name)
-      rescue JSON::ParserError, Errno::ENOENT
+      rescue JSON::ParserError => e
+        puts "⚠️  Warning: Failed to parse package.json: #{e.message}"
+        false
+      rescue Errno::ENOENT
         false
       end
     end
@@ -287,6 +287,10 @@ module IslandjsRails
     end
 
     private
+
+    def root_path
+      defined?(Rails) && Rails.respond_to?(:root) ? Rails.root : Pathname.new(Dir.pwd)
+    end
     
     # Check if a package has a partial file
     def has_partial?(package_name)

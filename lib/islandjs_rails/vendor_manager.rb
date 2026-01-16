@@ -138,7 +138,8 @@ module IslandjsRails
       if File.exist?(manifest_path)
         begin
           JSON.parse(File.read(manifest_path))
-        rescue JSON::ParserError
+        rescue JSON::ParserError => e
+          puts "⚠️  Warning: Failed to parse vendor manifest: #{e.message}"
           { 'libs' => [] }
         end
       else

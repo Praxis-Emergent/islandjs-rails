@@ -23,6 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Ruby 4.0 Compatibility**: Added explicit `cgi` gem dependency for test suite compatibility
   - Ruby 4.0+ extracted `cgi` from stdlib, causing VCR gem to fail
   - Added `cgi` as development dependency to ensure test suite works on Ruby 4.0+
+- **Critical: YarnError namespace prefix**: Fixed missing `IslandjsRails::` namespace prefix in YarnError raises
+  - Would cause `NameError: uninitialized constant YarnError` at runtime when yarn commands failed
+  - Fixed in `core_methods.rb` for add, update, and remove package operations
+- **Consistent Rails.root handling**: Added `root_path` helper method for uniform Rails.root access
+  - Prevents crashes when gem used outside Rails context (e.g., in standalone scripts)
+  - All file operations now use consistent path resolution
+- **JSON parsing error visibility**: Added debug logging for JSON parse failures
+  - Silent failures made debugging difficult
+  - Now logs warnings
+  - Affects package.json, manifest.json, and Vite config parsing
 
 ## [1.0.0] - 2025-11-05
 
