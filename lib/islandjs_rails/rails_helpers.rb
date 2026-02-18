@@ -376,13 +376,20 @@ module IslandjsRails
               const element = React.createElement(#{namespace_with_optional}.#{component_name}, props);
               
               try {
-                // Use React 19 createRoot if available, fallback to React 17 render
+                // Use React 18+ createRoot if available, fallback to React 17 render
                 if (window.ReactDOM.createRoot) {
                   if (!container._reactRoot) {
                     container._reactRoot = window.ReactDOM.createRoot(container);
                   }
-                  container._reactRoot.render(element);
-                  // React 19 automatically clears container - no manual cleanup needed
+                  // Use flushSync to force synchronous rendering, preventing flash
+                  // between placeholder removal and component render (React 18 concurrent mode issue)
+                  if (window.ReactDOM.flushSync) {
+                    window.ReactDOM.flushSync(() => {
+                      container._reactRoot.render(element);
+                    });
+                  } else {
+                    container._reactRoot.render(element);
+                  }
                 } else {
                   // React 17 - render is synchronous and clears container automatically
                   window.ReactDOM.render(element, container);
@@ -415,14 +422,12 @@ module IslandjsRails
             }
             
             // Turbo compatibility
+            // - turbo:load: fires after visit completes (safety net, mount already happened inline)
+            // - turbo:before-cache: cleanup before Turbo caches the page
+            // NOTE: No turbo:before-render cleanup (causes flash) or turbo:render mount
+            // (useless - old listeners have old container IDs that no longer exist)
             document.addEventListener('turbo:load', mount#{component_name});
             document.addEventListener('turbo:before-cache', cleanup#{component_name});
-            document.addEventListener('turbo:render', mount#{component_name});
-            document.addEventListener('turbo:before-render', cleanup#{component_name});
-            
-            // Legacy Turbolinks compatibility
-            document.addEventListener('turbolinks:load', mount#{component_name});
-            document.addEventListener('turbolinks:before-cache', cleanup#{component_name});
           })();
         </script>
       JAVASCRIPT
