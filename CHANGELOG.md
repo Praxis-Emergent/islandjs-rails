@@ -30,9 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - `VendorManager` class and all vendor file management
-- `ViteIntegration` class and Vite configuration management
-- `vite.config.islands.ts` template (bring your own)
-- `package.json` template (bring your own)
+- `ViteIntegration` class and Vite externals management
 - `UMD_PATH_PATTERNS`, `CDN_BASES`, `BUILT_IN_GLOBAL_NAME_OVERRIDES` constants
 - All CDN download and UMD resolution functionality
 - All Vite externals management
