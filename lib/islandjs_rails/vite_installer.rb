@@ -2,249 +2,101 @@
 
 require 'fileutils'
 require 'json'
-require_relative 'vite_integration'
 
 module IslandjsRails
-  # Idempotent installer for Islands + Vite integration
+  # Scaffolds the Islands directory structure, build config, and templates
   class ViteInstaller
-    attr_reader :vite_integration, :root_path
-    
+    attr_reader :root_path
+
     def initialize(root_path = Rails.root)
       @root_path = Pathname.new(root_path)
-      @vite_integration = ViteIntegration.new(root_path)
     end
-    
+
     # Main installation method - fully idempotent
     def install!
-      puts "🏝️  Initializing IslandJS Rails with Vite..."
-      
-      # Check current state
-      check_prerequisites!
-      
-      # Install/configure based on current state
-      if vite_integration.vite_installed?
-        puts "✓ Vite detected, configuring Islands alongside existing setup"
-        configure_islands_alongside_vite!
-      else
-        puts "✓ Installing Vite for Islands"
-        install_vite_from_scratch!
-      end
-      
-      # Always run these (idempotent)
+      puts "🏝️  Initializing IslandJS Rails..."
+
       create_islands_structure!
-      create_vendor_system!
+      create_entrypoint!
+      create_vite_config!
+      ensure_package_json!
       inject_islands_helper!
-      
+      install_dependencies!
+
       puts "\n🎉 IslandJS Rails initialized successfully!"
       print_next_steps
     end
-    
+
     private
-    
-    def check_prerequisites!
-      unless command_exists?('node')
-        raise Error, "Node.js not found. Please install Node.js 16+ first."
-      end
-      
-      unless command_exists?('yarn')
-        puts "⚠️  Yarn not found, installing..."
-        system('npm install -g yarn')
-      end
-    end
-    
-    def configure_islands_alongside_vite!
-      # Vite already exists, just add Islands config
-      create_islands_vite_config! unless vite_integration.islands_vite_config_exists?
-      create_islands_entrypoint!
-      update_package_json_for_islands!
-      install_vite_dependencies!
-    end
-    
-    def install_vite_from_scratch!
-      # No Vite yet, install everything
-      create_base_vite_config!
-      create_islands_vite_config!
-      create_islands_entrypoint!
-      setup_package_json!
-      install_vite_dependencies!
-    end
-    
-    def create_base_vite_config!
-      return if vite_integration.vite_config_exists?
-      
-      puts "✓ Creating base vite.config.ts"
-      
-      template = <<~TYPESCRIPT
-        import { defineConfig } from 'vite'
-        import react from '@vitejs/plugin-react'
-        import path from 'path'
-        
-        export default defineConfig({
-          plugins: [
-            react(),
-          ],
-          resolve: {
-            alias: {
-              '@': path.resolve(__dirname, 'app/javascript')
-            },
-          },
-        })
-      TYPESCRIPT
-      
-      vite_integration.vite_config_path.write(template)
-    end
-    
-    def create_islands_vite_config!
-      return if vite_integration.islands_vite_config_exists?
-      
-      puts "✓ Creating vite.config.islands.ts"
-      
-      template_path = File.expand_path('../templates/vite.config.islands.ts', __dir__)
-      FileUtils.cp(template_path, vite_integration.islands_vite_config_path)
-    end
-    
-    def create_islands_entrypoint!
-      entrypoint_path = root_path.join('app/javascript/entrypoints/islands.js')
-      return if entrypoint_path.exist?
-      
-      puts "✓ Creating Islands entrypoint"
-      
-      FileUtils.mkdir_p(entrypoint_path.dirname)
-      template_path = File.expand_path('../templates/app/javascript/entrypoints/islands.js', __dir__)
-      FileUtils.cp(template_path, entrypoint_path)
-    end
-    
-    def setup_package_json!
-      if vite_integration.package_json_exists?
-        update_package_json_for_islands!
-      else
-        create_package_json!
-      end
-    end
-    
-    def create_package_json!
-      puts "✓ Creating package.json"
-      
-      package_json = {
-        "private" => true,
-        "type" => "module",
-        "scripts" => {
-          "build:islands" => "vite build --config vite.config.islands.ts",
-          "watch:islands" => "vite build --config vite.config.islands.ts --watch"
-        },
-        "dependencies" => {},
-        "devDependencies" => {}
-      }
-      
-      vite_integration.write_package_json(package_json)
-    end
-    
-    def update_package_json_for_islands!
-      puts "✓ Updating package.json scripts"
-      vite_integration.update_package_json_scripts!
-    end
-    
-    def install_vite_dependencies!
-      puts "📦 Installing Vite dependencies..."
-      
-      # Check what's already installed
-      package_json = vite_integration.read_package_json
-      dev_deps = package_json['devDependencies'] || {}
-      
-      deps_to_install = []
-      
-      # Required Vite dependencies
-      deps_to_install << 'vite@^5.4.19' unless dev_deps.key?('vite')
-      deps_to_install << '@vitejs/plugin-react@^5.0.0' unless dev_deps.key?('@vitejs/plugin-react')
-      
-      if deps_to_install.any?
-        puts "  Installing: #{deps_to_install.join(', ')}"
-        system("yarn add --dev #{deps_to_install.join(' ')}")
-      else
-        puts "  ✓ Vite dependencies already installed"
-      end
-    end
-    
+
     def create_islands_structure!
       islands_dir = root_path.join('app/javascript/islands')
-      
+
       if islands_dir.exist?
         puts "✓ Islands structure already exists"
         return
       end
-      
+
       puts "✓ Creating Islands directory structure"
-      
-      # Create directories
+
       FileUtils.mkdir_p(islands_dir.join('components'))
       FileUtils.mkdir_p(islands_dir.join('utils'))
-      
+
       # Copy HelloWorld component template
-      hello_world_path = islands_dir.join('components/HelloWorld.jsx')
-      unless hello_world_path.exist?
-        template_path = File.expand_path('../templates/app/javascript/islands/components/HelloWorld.jsx', __dir__)
-        FileUtils.cp(template_path, hello_world_path) if File.exist?(template_path)
-      end
-      
+      copy_template('app/javascript/islands/components/HelloWorld.jsx')
+
       # Copy Turbo utilities
-      turbo_utils_path = islands_dir.join('utils/turbo.js')
-      unless turbo_utils_path.exist?
-        template_path = File.expand_path('../templates/app/javascript/islands/utils/turbo.js', __dir__)
-        FileUtils.cp(template_path, turbo_utils_path) if File.exist?(template_path)
-      end
+      copy_template('app/javascript/islands/utils/turbo.js')
     end
-    
-    def create_vendor_system!
-      vendor_dir = root_path.join('public/vendor/islands')
-      
-      if vendor_dir.exist?
-        puts "✓ Vendor system already exists"
+
+    def create_entrypoint!
+      entrypoint_path = root_path.join('app/javascript/entrypoints/islands.js')
+      return if entrypoint_path.exist?
+
+      puts "✓ Creating Islands entrypoint"
+      FileUtils.mkdir_p(entrypoint_path.dirname)
+      copy_template('app/javascript/entrypoints/islands.js')
+    end
+
+    def create_vite_config!
+      vite_config_path = root_path.join('vite.config.islands.ts')
+
+      if vite_config_path.exist?
+        puts "✓ Vite config already exists"
         return
       end
-      
-      puts "✓ Creating vendor directory"
-      FileUtils.mkdir_p(vendor_dir)
-      
-      # Create vendor UMD partial
-      create_vendor_partial!
+
+      puts "✓ Creating vite.config.islands.ts"
+      copy_template('vite.config.islands.ts', destination: vite_config_path)
     end
-    
-    def create_vendor_partial!
-      partials_dir = root_path.join('app/views/shared/islands')
-      FileUtils.mkdir_p(partials_dir)
-      
-      partial_path = partials_dir.join('_vendor_umd.html.erb')
-      return if partial_path.exist?
-      
-      puts "✓ Creating vendor UMD partial"
-      
-      # Create empty partial - will be populated when packages are installed
-      partial_content = <<~ERB
-        <%# IslandJS Rails - UMD Vendor Scripts %>
-        <%# This partial is auto-generated. Run: rails islandjs:install[react] %>
-      ERB
-      
-      partial_path.write(partial_content)
+
+    def ensure_package_json!
+      package_json_path = root_path.join('package.json')
+
+      if package_json_path.exist?
+        add_build_scripts!(package_json_path)
+      else
+        create_package_json!(package_json_path)
+      end
     end
-    
+
     def inject_islands_helper!
-      layout_path = vite_integration.islands_layout_path
-      
+      layout_path = root_path.join('app/views/layouts/application.html.erb')
+
       unless layout_path.exist?
         puts "⚠️  application.html.erb not found, skipping helper injection"
         return
       end
-      
-      if vite_integration.layout_has_islands_helper?
+
+      content = layout_path.read
+
+      if content.include?('<%= islands %>') || content.include?('islands %>')
         puts "✓ Islands helper already in layout"
         return
       end
-      
+
       puts "✓ Adding <%= islands %> to application.html.erb"
-      
-      content = layout_path.read
-      
-      # Try to inject before </head>
+
       if content.include?('</head>')
         updated = content.sub('</head>', "    <%= islands %>\n  </head>")
         layout_path.write(updated)
@@ -252,35 +104,110 @@ module IslandjsRails
         puts "  ⚠️  Could not find </head> tag, please add <%= islands %> manually"
       end
     end
-    
-    def print_next_steps
-      puts "\n📋 Next steps:"
-      puts "1. Install React UMD libraries:"
-      puts "   rails \"islandjs:install[react,19.1.0]\""
-      puts "   rails \"islandjs:install[react-dom,19.1.0]\""
-      puts ""
-      puts "2. Build Islands bundle:"
-      puts "   yarn build:islands"
-      puts ""
-      puts "3. Use in ERB templates:"
-      puts "   <%= react_component('HelloWorld', { message: 'Hello!' }) %>"
-      puts ""
-      
-      if vite_integration.vite_installed?
-        puts "💡 Existing Vite setup detected! You now have:"
-        puts "   - Islands dev: yarn watch:islands"
-        puts "   - Build both: yarn build"
-      else
-        puts "💡 Start development:"
-        puts "   yarn watch:islands"
+
+    def install_dependencies!
+      return unless yarn_available?
+
+      deps = %w[react react-dom]
+      dev_deps = %w[vite @vitejs/plugin-react]
+
+      missing_deps = deps.reject { |d| package_has_dependency?(d) }
+      missing_dev_deps = dev_deps.reject { |d| package_has_dependency?(d) }
+
+      if missing_deps.empty? && missing_dev_deps.empty?
+        puts "✓ All dependencies already installed"
+        return
       end
-      
-      puts ""
-      puts "🚀 Ready to build Islands!"
+
+      puts "✓ Installing dependencies..."
+
+      if missing_deps.any?
+        system("yarn add #{missing_deps.join(' ')}", chdir: root_path.to_s)
+      end
+
+      if missing_dev_deps.any?
+        system("yarn add --dev #{missing_dev_deps.join(' ')}", chdir: root_path.to_s)
+      end
     end
-    
-    def command_exists?(command)
-      system("which #{command} > /dev/null 2>&1")
+
+    def print_next_steps
+      steps = []
+
+      unless yarn_available?
+        steps << "1. Install Node.js and Yarn, then run:\n   yarn add react react-dom\n   yarn add --dev vite @vitejs/plugin-react"
+      end
+
+      steps << "#{steps.length + 1}. Build your Islands bundle:\n   yarn build:islands"
+      steps << "#{steps.length + 1}. Use in ERB templates:\n   <%= react_component('HelloWorld', { message: 'Hello!' }) %>"
+
+      puts "\n📋 Next steps:"
+      steps.each { |s| puts s; puts "" }
+    end
+
+    def copy_template(relative_path, destination: nil)
+      template_path = File.expand_path("../templates/#{relative_path}", __dir__)
+      destination_path = destination || root_path.join(relative_path)
+
+      return unless File.exist?(template_path)
+
+      FileUtils.mkdir_p(File.dirname(destination_path))
+      FileUtils.cp(template_path, destination_path)
+    end
+
+    def yarn_available?
+      @yarn_available = system('which yarn > /dev/null 2>&1') if @yarn_available.nil?
+      @yarn_available
+    end
+
+    def package_has_dependency?(name)
+      package_json_path = root_path.join('package.json')
+      return false unless package_json_path.exist?
+
+      data = JSON.parse(package_json_path.read)
+      (data['dependencies'] || {}).key?(name) || (data['devDependencies'] || {}).key?(name)
+    rescue JSON::ParserError
+      false
+    end
+
+    def create_package_json!(path)
+      puts "✓ Creating package.json"
+
+      data = {
+        'name' => root_path.basename.to_s.downcase.gsub(/[^a-z0-9_-]/, '-'),
+        'private' => true,
+        'scripts' => build_scripts
+      }
+
+      File.write(path, JSON.pretty_generate(data) + "\n")
+    end
+
+    def add_build_scripts!(path)
+      data = JSON.parse(File.read(path))
+      data['scripts'] ||= {}
+
+      added = false
+      build_scripts.each do |key, value|
+        unless data['scripts'].key?(key)
+          data['scripts'][key] = value
+          added = true
+        end
+      end
+
+      if added
+        puts "✓ Adding build scripts to package.json"
+        File.write(path, JSON.pretty_generate(data) + "\n")
+      else
+        puts "✓ Build scripts already in package.json"
+      end
+    rescue JSON::ParserError
+      puts "⚠️  Could not parse package.json, please add build scripts manually"
+    end
+
+    def build_scripts
+      {
+        'build:islands' => 'vite build --config vite.config.islands.ts',
+        'watch:islands' => 'vite build --config vite.config.islands.ts --watch'
+      }
     end
   end
 end

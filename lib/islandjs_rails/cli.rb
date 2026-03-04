@@ -7,48 +7,6 @@ module IslandjsRails
       IslandjsRails.init!
     end
 
-    desc "install PACKAGE_NAME [VERSION]", "Install a JavaScript island package"
-    def install(package_name, version = nil)
-      IslandjsRails.install!(package_name, version)
-    end
-
-    desc "update PACKAGE_NAME [VERSION]", "Update a JavaScript island package"
-    def update(package_name, version = nil)
-      IslandjsRails.update!(package_name, version)
-    end
-
-    desc "remove PACKAGE_NAME", "Remove a JavaScript island package"
-    def remove(package_name)
-      IslandjsRails.remove!(package_name)
-    end
-
-    desc "sync", "Sync all JavaScript island packages with current package.json"
-    def sync
-      IslandjsRails.sync!
-    end
-
-    desc "status", "Show status of all JavaScript island packages"
-    def status
-      IslandjsRails.status!
-    end
-
-    desc "clean", "Clean all island partials and reset Vite externals"
-    def clean
-      IslandjsRails.clean!
-    end
-
-    desc "config", "Show IslandJS configuration"
-    def config
-      config = IslandjsRails.configuration
-      puts "📊 IslandjsRails Configuration"
-      puts "=" * 40
-      puts "Package.json path: #{config.package_json_path}"
-      puts "Partials directory: #{config.partials_dir}"
-      puts "Vite Islands config: vite.config.islands.ts"
-      puts "Supported CDNs: #{config.supported_cdns.join(', ')}"
-      puts "Built-in global name overrides: #{IslandjsRails::BUILT_IN_GLOBAL_NAME_OVERRIDES.size} available"
-    end
-
     desc "version", "Show IslandJS Rails version"
     def version
       puts "IslandjsRails #{IslandjsRails::VERSION}"
