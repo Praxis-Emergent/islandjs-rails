@@ -8,12 +8,12 @@
   </div>
 
   <h1 class="text-3xl font-bold mb-6">🚀 React Component Island</h1>
-  
+
   <!-- Turbo Cache Demo Instructions -->
   <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
     <h3 class="text-lg font-semibold text-yellow-800 mb-2">🔄 Test Turbo Cache Integration</h3>
     <p class="text-yellow-700 mb-2">
-      <strong>Try this:</strong> Interact with the component below (click the button, change the message), 
+      <strong>Try this:</strong> Interact with the component below (click the button, change the message),
       then navigate back to the demo home and return here. Your changes will be preserved!
     </p>
     <p class="text-sm text-yellow-600">
@@ -27,12 +27,12 @@
     <p class="text-gray-600 mb-4">
       This React component maintains its state across page navigation thanks to Turbo cache integration.
     </p>
-    
+
     <div id="hello-world-demo" class="border-2 border-dashed border-blue-300 rounded-lg p-6 bg-blue-50">
-      <%= react_component('HelloWorld', { 
-        message: 'Hello from IslandJS Rails!', 
+      <%= react_component('HelloWorld', {
+        message: 'Hello from IslandJS Rails!',
         count: 0,
-        showAdvanced: false 
+        showAdvanced: false
       }) %>
     </div>
   </div>
@@ -46,7 +46,7 @@
         <ol class="space-y-1 text-gray-600">
           <li>1. Rails renders this ERB template</li>
           <li>2. <code class="bg-gray-200 px-1 rounded">react_component</code> helper creates container</li>
-          <li>3. React loads from vendor files (<code class="bg-gray-200 px-1 rounded">/islands/vendor/</code>)</li>
+          <li>3. React is bundled into the Islands bundle</li>
           <li>4. Component mounts as independent "island"</li>
         </ol>
       </div>
@@ -64,7 +64,7 @@
 
   <!-- Navigation Actions -->
   <div class="text-center">
-    <a href="/islandjs" 
+    <a href="/islandjs"
        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
       <span class="mr-2">←</span>
       Back to Demo Home
@@ -76,7 +76,6 @@
   <div class="mt-8 bg-gray-800 text-green-400 p-4 rounded-lg text-sm font-mono">
     <h4 class="text-green-300 font-bold mb-2">🔧 Development Info</h4>
     <div class="space-y-1">
-      <div>Vendor Mode: <%= IslandjsRails.configuration.vendor_script_mode %></div>
       <div>React: <span id="react-version">Loading...</span></div>
       <div>ReactDOM: <span id="reactdom-version">Loading...</span></div>
       <div>Islands Namespace: <span id="islands-namespace">Loading...</span></div>

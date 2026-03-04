@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-03-03
+
+### ⚠️ BREAKING CHANGES
+
+**React is now bundled directly** into your Islands bundle. The entrypoint template imports React and ReactDOM as regular npm dependencies and exposes them on `window`. No more separate UMD script tags or CDN downloads.
+
+**Removed the entire UMD/vendor system:**
+- `rails islandjs:install` — Use `yarn add` instead
+- `rails islandjs:update` — Use `yarn upgrade` instead
+- `rails islandjs:remove` — Use `yarn remove` instead
+- `rails islandjs:sync` — No longer applicable
+- `rails islandjs:clean` — No longer applicable
+- `rails islandjs:config` — No longer applicable
+- `rails islandjs:vendor:*` — Vendor system removed
+
+**Gem no longer manages build configuration.** Bring your own `vite.config.islands.ts` (or use any bundler). The gem scaffolds directory structure, templates, and provides Rails helpers — that's it.
+
+### Changed
+- **`rails islandjs:init`**: Now only creates directory structure, entrypoint, Turbo utilities, and injects layout helper
+- **`islands` helper**: Just renders the bundle script tag (no more vendor UMD partial)
+- **Mount script warnings**: No longer reference `islandjs:install` commands
+- **Entrypoint template**: Imports React/ReactDOM directly and exposes on `window`
+- **Gemspec**: Updated description to reflect React-focused approach
+- **README**: Complete rewrite — focused on React + Turbo, no UMD/vendor documentation
+
+### Removed
+- `VendorManager` class and all vendor file management
+- `ViteIntegration` class and Vite configuration management
+- `vite.config.islands.ts` template (bring your own)
+- `package.json` template (bring your own)
+- `UMD_PATH_PATTERNS`, `CDN_BASES`, `BUILT_IN_GLOBAL_NAME_OVERRIDES` constants
+- All CDN download and UMD resolution functionality
+- All Vite externals management
+- `island_partials`, `umd_versions_debug`, `umd_partial_for`, `react_partials`, `extra_vendor_tag` helpers
+- Vendor configuration options (`vendor_script_mode`, `vendor_order`, `vendor_dir`, etc.)
+- Package management methods (`install!`, `update!`, `remove!`, `sync!`, `status!`, `clean!`)
+
+### Migration from 1.x
+
+1. Update your Gemfile: `gem 'islandjs-rails', '~> 2.0'`
+2. Add React as a direct dependency: `yarn add react react-dom`
+3. Update your entrypoint (`app/javascript/entrypoints/islands.js`) to import React directly — see the README for the pattern
+4. Remove `public/vendor/islands/` directory (no longer used)
+5. Remove `app/views/shared/islands/` directory (no longer used)
+6. Your `react_component` calls in ERB templates work exactly the same — no view changes needed
+
 ## [1.1.0] - 2026-01-16
 
 ### Removed
@@ -114,7 +160,7 @@ See [UPGRADING.md](UPGRADING.md) for detailed migration instructions. Summary:
 ## [0.5.0] - 2025-09-29
 
 ### Added
-- **CSP support for script tags**: All IslandJS-generated `<script>` tags now automatically include a CSP nonce when one is present in the Rails request.  
+- **CSP support for script tags**: All IslandJS-generated `<script>` tags now automatically include a CSP nonce when one is present in the Rails request.
 - **Flexible script attributes**: Helpers (`react_component`, etc.) now support passing standard script attributes (`nonce`, `defer`, `async`, `crossorigin`, `integrity`).
 
 ## [0.4.0] - 2025-08-10
