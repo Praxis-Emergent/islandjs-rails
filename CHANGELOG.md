@@ -20,10 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `rails islandjs:config` — No longer applicable
 - `rails islandjs:vendor:*` — Vendor system removed
 
-**Gem no longer manages build configuration.** Bring your own `vite.config.islands.ts` (or use any bundler). The gem scaffolds directory structure, templates, and provides Rails helpers — that's it.
-
 ### Changed
-- **`rails islandjs:init`**: Now only creates directory structure, entrypoint, Turbo utilities, and injects layout helper
+- **`rails islandjs:init`**: Now creates directory structure, entrypoint, Turbo utilities, Vite config, package.json build scripts, installs dependencies, and injects layout helper — one command gets you from zero to building
 - **`islands` helper**: Just renders the bundle script tag (no more vendor UMD partial)
 - **Mount script warnings**: No longer reference `islandjs:install` commands
 - **Entrypoint template**: Imports React/ReactDOM directly and exposes on `window`

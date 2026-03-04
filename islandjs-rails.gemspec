@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
     📋 Get started:
 
         rails islandjs:init
-        yarn add react react-dom
+        yarn build:islands
 
   MSG
 

@@ -5,6 +5,11 @@ RSpec.describe IslandjsRails::ViteInstaller do
   let(:temp_dir) { create_temp_dir }
   let(:installer) { described_class.new(temp_dir) }
 
+  before do
+    # Suppress yarn commands in tests
+    allow_any_instance_of(described_class).to receive(:yarn_available?).and_return(false)
+  end
+
   describe '#install!' do
     it 'creates islands directory structure' do
       expect { installer.install! }.to output(/Initializing IslandJS Rails/).to_stdout
@@ -21,28 +26,62 @@ RSpec.describe IslandjsRails::ViteInstaller do
       expect(File.exist?(entrypoint)).to be true
     end
 
-    it 'is idempotent for directory structure' do
-      # First run
-      expect { installer.install! }.to output(/Creating Islands directory structure/).to_stdout
+    it 'creates vite.config.islands.ts' do
+      expect { installer.install! }.to output(/Creating vite\.config\.islands\.ts/).to_stdout
 
-      # Second run should detect existing structure
+      vite_config = File.join(temp_dir, 'vite.config.islands.ts')
+      expect(File.exist?(vite_config)).to be true
+
+      content = File.read(vite_config)
+      expect(content).to include('defineConfig')
+      expect(content).to include('islands.js')
+      expect(content).to include("formats: ['iife']")
+    end
+
+    it 'creates package.json with build scripts when none exists' do
+      expect { installer.install! }.to output(/Creating package\.json/).to_stdout
+
+      package_json = JSON.parse(File.read(File.join(temp_dir, 'package.json')))
+      expect(package_json['scripts']['build:islands']).to include('vite build')
+      expect(package_json['scripts']['watch:islands']).to include('--watch')
+    end
+
+    it 'adds build scripts to existing package.json' do
+      File.write(File.join(temp_dir, 'package.json'), JSON.generate({
+        'name' => 'test-app',
+        'dependencies' => {}
+      }))
+
+      expect { installer.install! }.to output(/Adding build scripts/).to_stdout
+
+      package_json = JSON.parse(File.read(File.join(temp_dir, 'package.json')))
+      expect(package_json['scripts']['build:islands']).to include('vite build')
+    end
+
+    it 'is idempotent for directory structure' do
+      expect { installer.install! }.to output(/Creating Islands directory structure/).to_stdout
       expect { installer.install! }.to output(/already exists/).to_stdout
     end
 
     it 'is idempotent for entrypoint' do
-      # Create entrypoint directory and file manually
       entrypoint_dir = File.join(temp_dir, 'app', 'javascript', 'entrypoints')
       FileUtils.mkdir_p(entrypoint_dir)
       File.write(File.join(entrypoint_dir, 'islands.js'), '// existing')
 
-      # Should not overwrite
       expect { installer.install! }.to output(/Initializing/).to_stdout
       content = File.read(File.join(entrypoint_dir, 'islands.js'))
       expect(content).to eq('// existing')
     end
 
+    it 'is idempotent for vite config' do
+      vite_path = File.join(temp_dir, 'vite.config.islands.ts')
+      File.write(vite_path, '// custom config')
+
+      expect { installer.install! }.to output(/Vite config already exists/).to_stdout
+      expect(File.read(vite_path)).to eq('// custom config')
+    end
+
     it 'injects islands helper into layout' do
-      # Create a layout file
       layout_dir = File.join(temp_dir, 'app', 'views', 'layouts')
       FileUtils.mkdir_p(layout_dir)
       File.write(File.join(layout_dir, 'application.html.erb'), <<~HTML)
@@ -76,8 +115,29 @@ RSpec.describe IslandjsRails::ViteInstaller do
     end
 
     it 'warns when no layout file found' do
-      # No layout file exists
       expect { installer.install! }.to output(/application\.html\.erb not found/).to_stdout
+    end
+  end
+
+  describe 'dependency installation' do
+    it 'installs dependencies when yarn is available' do
+      allow_any_instance_of(described_class).to receive(:yarn_available?).and_return(true)
+      allow_any_instance_of(described_class).to receive(:package_has_dependency?).and_return(false)
+      expect_any_instance_of(described_class).to receive(:system).with(/yarn add react react-dom/, anything).and_return(true)
+      expect_any_instance_of(described_class).to receive(:system).with(/yarn add --dev vite/, anything).and_return(true)
+
+      expect { installer.install! }.to output(/Installing dependencies/).to_stdout
+    end
+
+    it 'skips installation when all dependencies present' do
+      allow_any_instance_of(described_class).to receive(:yarn_available?).and_return(true)
+      allow_any_instance_of(described_class).to receive(:package_has_dependency?).and_return(true)
+
+      expect { installer.install! }.to output(/All dependencies already installed/).to_stdout
+    end
+
+    it 'shows manual instructions when yarn is not available' do
+      expect { installer.install! }.to output(/Install Node\.js and Yarn/).to_stdout
     end
   end
 end

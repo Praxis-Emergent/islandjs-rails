@@ -7,7 +7,6 @@ Version 2.0 removes the UMD/vendor system entirely. React and all dependencies a
 ### Breaking Changes
 
 - **UMD/vendor system removed**: No more `rails islandjs:install`, vendor directory, or CDN downloads
-- **Gem no longer manages build config**: Bring your own `vite.config.islands.ts` (or any bundler)
 - **React bundled directly**: Imported in the entrypoint and exposed on `window`
 
 ### Upgrade Steps

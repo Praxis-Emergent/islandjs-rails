@@ -17,9 +17,11 @@ gem 'islandjs-rails'
 
 ```bash
 bundle install
-rails islandjs:init
-yarn add react react-dom
+rails islandjs:init    # Sets up everything: directories, Vite config, dependencies
+yarn build:islands     # Build the bundle
 ```
+
+> `rails islandjs:init` creates the directory structure, Vite config, `package.json` build scripts, installs React and Vite dependencies (if Yarn is available), and injects `<%= islands %>` into your layout.
 
 ### Write a Component
 
