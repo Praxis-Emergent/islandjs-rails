@@ -1,10 +1,10 @@
 <div class="max-w-4xl mx-auto p-8">
   <h1 class="text-4xl font-bold mb-6">🏝️ IslandJS Rails Demo</h1>
-  
+
   <div class="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8">
     <h2 class="text-xl font-semibold text-blue-800 mb-2">Welcome to IslandJS Rails!</h2>
     <p class="text-blue-700">
-      This demo showcases React components as "islands" within a Rails application, 
+      This demo showcases React components as "islands" within a Rails application,
       with full Turbo cache integration for seamless navigation.
     </p>
   </div>
@@ -19,7 +19,7 @@
         </li>
         <li class="flex items-start">
           <span class="text-green-500 mr-2">✓</span>
-          Simplified build process - UMD libraries from vendor files
+          React bundled directly — no separate script tags needed
         </li>
         <li class="flex items-start">
           <span class="text-green-500 mr-2">✓</span>
@@ -27,7 +27,7 @@
         </li>
         <li class="flex items-start">
           <span class="text-green-500 mr-2">✓</span>
-          Production-ready asset delivery system
+          Simple ERB helpers for mounting components
         </li>
       </ul>
     </div>
@@ -35,11 +35,11 @@
     <div class="bg-white rounded-lg shadow-md p-6 border">
       <h3 class="text-lg font-semibold mb-3 text-gray-800">🎯 Test the Magic</h3>
       <p class="text-gray-600 mb-4">
-        Click the React demo below, interact with the component, then navigate back. 
+        Click the React demo below, interact with the component, then navigate back.
         Your component state will be preserved thanks to Turbo cache integration!
       </p>
       <div class="bg-gray-50 p-3 rounded text-sm text-gray-700">
-        <strong>Try this:</strong> Change the counter, navigate away, then come back. 
+        <strong>Try this:</strong> Change the counter, navigate away, then come back.
         The counter value persists! 🎉
       </div>
     </div>
@@ -48,18 +48,18 @@
   <div class="bg-white rounded-lg shadow-md p-6 border mb-8">
     <h3 class="text-lg font-semibold mb-4 text-gray-800">🏝️ React Island Demo</h3>
     <p class="text-gray-600 mb-4">
-      Experience React components as "islands" within your Rails application. 
+      Experience React components as "islands" within your Rails application.
       This demonstrates the core IslandJS Rails philosophy: modern JavaScript without the complexity.
     </p>
-    
+
     <div class="flex space-x-4">
-      <a href="/islandjs/react" 
+      <a href="/islandjs/react"
          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
         <span class="mr-2">🚀</span>
         View React Demo
       </a>
-      
-      <a href="/islandjs/react" 
+
+      <a href="/islandjs/react"
          class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
         <span class="mr-2">🔄</span>
         Test Turbo Cache
@@ -71,11 +71,11 @@
     <h3 class="text-lg font-semibold mb-3 text-gray-800">📚 How It Works</h3>
     <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
       <div>
-        <h4 class="font-medium text-gray-800 mb-2">Vendor System</h4>
+        <h4 class="font-medium text-gray-800 mb-2">Islands Architecture</h4>
         <ul class="space-y-1">
-          <li>• React & ReactDOM served from <code class="bg-gray-200 px-1 rounded">/islands/vendor/</code></li>
-          <li>• Browser caching for optimal performance</li>
-          <li>• No bundling of external libraries (loaded as UMD)</li>
+          <li>• React components bundled with your app code</li>
+          <li>• Mounted as independent "islands" in ERB templates</li>
+          <li>• No full-page SPA — just interactive pieces where needed</li>
         </ul>
       </div>
       <div>
@@ -91,7 +91,7 @@
 
   <div class="mt-8 text-center text-gray-500 text-sm">
     <p>
-      Built with IslandJS Rails • 
+      Built with IslandJS Rails •
       <a href="https://github.com/praxis-emergent/islandjs-rails" class="text-blue-600 hover:text-blue-800">View on GitHub</a>
     </p>
   </div>

@@ -8,4 +8,7 @@ gem "rspec", "~> 3.0"
 gem "webmock", "~> 3.0"
 gem "vcr", "~> 6.0"
 gem "simplecov", "~> 0.22"
-gem "rails", "~> 8.0" # For testing Rails 8 integration 
+gem "rails", "~> 8.0" # For testing Rails 8 integration
+
+# Ruby 4.0+ extracted these from stdlib
+gem "cgi" 

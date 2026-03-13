@@ -1,46 +1,24 @@
 require 'simplecov'
 
-# Start SimpleCov before requiring any application code
 SimpleCov.start do
   add_filter '/spec/'
   add_filter '/vendor/'
-  
-  add_group 'Core', 'lib/islandjs_rails/core.rb'
+
+  add_group 'Core', ['lib/islandjs_rails/core.rb', 'lib/islandjs_rails/core_methods.rb']
+  add_group 'Installer', 'lib/islandjs_rails/vite_installer.rb'
   add_group 'Rails Integration', ['lib/islandjs_rails/rails_helpers.rb', 'lib/islandjs_rails/railtie.rb']
   add_group 'CLI', 'lib/islandjs_rails/cli.rb'
-  add_group 'Configuration', 'lib/islandjs_rails/configuration.rb'
-  
+
   minimum_coverage 80
   minimum_coverage_by_file 30
 end
 
 require 'bundler/setup'
 require 'islandjs_rails'
-require 'vcr'
-require 'webmock/rspec'
 require 'rails'
 require 'action_view'
 require 'tempfile'
 require 'fileutils'
-
-# VCR configuration for HTTP request stubbing
-VCR.configure do |config|
-  config.cassette_library_dir = File.expand_path('../fixtures/vcr_cassettes', __FILE__)
-  config.hook_into :webmock
-  config.configure_rspec_metadata!
-  config.allow_http_connections_when_no_cassette = false
-  
-  # Filter sensitive data
-  config.filter_sensitive_data('<FILTERED>') { |interaction|
-    interaction.request.headers['Authorization']&.first
-  }
-  
-  # Default cassette options
-  config.default_cassette_options = {
-    record: :once,
-    match_requests_on: [:method, :uri, :body]
-  }
-end
 
 # Rails test environment setup
 ENV['RAILS_ENV'] = 'test'
@@ -54,17 +32,13 @@ class TestApp < Rails::Application
 end
 
 RSpec.configure do |config|
-  # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
-
-  # Disable RSpec exposing methods globally on `Object`
   config.disable_monkey_patching!
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
 
-  # Clean up temporary files after each test
   config.before(:each) do
     @temp_dirs = []
     @original_rails_root = Rails.root if defined?(Rails)
@@ -74,24 +48,19 @@ RSpec.configure do |config|
     @temp_dirs.each do |dir|
       FileUtils.rm_rf(dir) if Dir.exist?(dir)
     end
-    
-    # Reset IslandjsRails configuration
+
+    # Reset IslandjsRails singletons
     IslandjsRails.instance_variable_set(:@configuration, nil)
     IslandjsRails.instance_variable_set(:@core, nil)
   end
-  
+
   config.after(:suite) do
-    # Clean up any accidentally created app/ directory in project root after all tests
+    # Clean up any accidentally created app/ directory in project root
     project_root = File.expand_path('../..', __FILE__)
     app_dir = File.join(project_root, 'app')
-    
-    if Dir.exist?(app_dir)
-      # This gem should not have an app/ directory in its root
-      FileUtils.rm_rf(app_dir)
-    end
+    FileUtils.rm_rf(app_dir) if Dir.exist?(app_dir)
   end
 
-  # Helper methods for tests
   config.include Module.new {
     def create_temp_dir
       dir = Dir.mktmpdir
@@ -108,34 +77,8 @@ RSpec.configure do |config|
       File.write(File.join(dir, 'package.json'), JSON.pretty_generate(package_json))
     end
 
-    def create_temp_vite_config(dir)
-      vite_content = <<~TS
-        import { defineConfig } from 'vite'
-        import react from '@vitejs/plugin-react'
-
-        export default defineConfig({
-          build: {
-            rollupOptions: {
-              external: [],
-              output: {
-                globals: {}
-              }
-            }
-          }
-        })
-      TS
-      File.write(File.join(dir, 'vite.config.islands.ts'), vite_content)
-    end
-
     def mock_rails_root(path)
       allow(Rails).to receive(:root).and_return(Pathname.new(path))
     end
-
-    def with_configuration(**options, &block)
-      IslandjsRails.configure do |config|
-        options.each { |key, value| config.send("#{key}=", value) }
-      end
-      block.call
-    end
   }
-end 
+end

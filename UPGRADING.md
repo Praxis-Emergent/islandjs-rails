@@ -1,16 +1,13 @@
 # Upgrading IslandJS Rails
 
-## Upgrading from 0.x to 1.0
+## Upgrading from 1.x to 2.0
 
-Version 1.0 replaces webpack with Vite for a faster, more modern build system.
+Version 2.0 removes the UMD/vendor system entirely. React and all dependencies are now bundled directly into your Islands bundle as regular npm dependencies.
 
 ### Breaking Changes
 
-- **Build system**: webpack → Vite
-- **Config file**: `webpack.config.js` → `vite.config.islands.ts`
-- **Build command**: `yarn build` → `yarn build:islands`
-- **Watch command**: `yarn watch` → `yarn watch:islands`
-- **Manifest location**: `public/islands_manifest.json` → `public/islands/.vite/manifest.json`
+- **UMD/vendor system removed**: No more `rails islandjs:install`, vendor directory, or CDN downloads
+- **React bundled directly**: Imported in the entrypoint and exposed on `window`
 
 ### Upgrade Steps
 
@@ -19,86 +16,58 @@ Version 1.0 replaces webpack with Vite for a faster, more modern build system.
    bundle update islandjs-rails
    ```
 
-2. **Remove webpack setup**:
+2. **Add React as a direct dependency** (if not already):
    ```bash
-   # Remove webpack config
-   rm webpack.config.js
-   
-   # Remove webpack dependencies from package.json
-   yarn remove webpack webpack-cli webpack-manifest-plugin
+   yarn add react react-dom
    ```
 
-3. **Add ESM support to package.json**:
-   Add `"type": "module"` to your `package.json`:
-   ```json
-   {
-     "name": "your-app",
-     "private": true,
-     "type": "module",
-     ...
+3. **Update your entrypoint** (`app/javascript/entrypoints/islands.js`):
+   ```javascript
+   import React from 'react'
+   import * as ReactDOM from 'react-dom'
+   import { createRoot, hydrateRoot } from 'react-dom/client'
+   import HelloWorld from '../islands/components/HelloWorld.jsx'
+
+   // Expose React and ReactDOM globally for islandjs-rails mount scripts
+   window.React = React
+   window.ReactDOM = { ...ReactDOM, createRoot, hydrateRoot }
+
+   window.islandjsRails = {
+     HelloWorld,
    }
    ```
-   This is required for Vite's TypeScript config to use ESM imports.
 
-4. **Reinitialize with Vite**:
-   ```bash
-   rails islandjs:init
+4. **Update your Vite config** — remove React externals from `vite.config.islands.ts`:
+   ```typescript
+   // Remove these from rollupOptions:
+   //   external: ['react', 'react-dom'],
+   //   globals: { react: 'React', 'react-dom': 'ReactDOM' }
    ```
-   
-   This will:
-   - Create `vite.config.islands.ts`
-   - Install Vite dependencies
-   - Update your `package.json` scripts
-   - Set up the new build structure
 
-5. **Update your build/deploy scripts** (if any):
-   - Change `yarn build` to `yarn build:islands`
-   - Change `yarn watch` to `yarn watch:islands`
+5. **Clean up old vendor files**:
+   ```bash
+   rm -rf public/vendor/islands/
+   rm -rf app/views/shared/islands/
+   ```
 
-6. **Rebuild your islands**:
+6. **Rebuild**:
    ```bash
    yarn build:islands
    ```
 
 ### What Stays the Same
 
-✅ **No code changes needed!**
-- All Rails helpers work identically (`react_component`, `island_partials`, etc.)
-- Your island components don't need any changes
-- Your ERB templates don't need any changes
-- The UMD vendor system works the same way
-- All `rails islandjs:*` commands work the same way
-
-### Benefits of Vite
-
-- ⚡ **Much faster builds** (2-10x faster than webpack)
-- 🔥 **Instant HMR** during development
-- 📦 **Smaller bundle sizes** with better tree-shaking
-- 🎯 **Simpler configuration** - no complex webpack config needed
-- 🚀 **Modern tooling** - built for ES modules and modern JavaScript
-
-### Troubleshooting
-
-**Build fails with "@vitejs/plugin-react resolved to an ESM file"**:
-Add `"type": "module"` to your `package.json`. Vite's TypeScript config requires ESM support.
-
-**Build fails with "vite not found"**:
-```bash
-yarn install
-```
-
-**Old webpack files still present**:
-```bash
-rm webpack.config.js
-rm -rf node_modules/.cache/webpack
-```
-
-**Manifest not found errors**:
-```bash
-yarn build:islands
-```
+- All `react_component` calls in ERB templates work exactly the same
+- Turbo cache integration works the same
+- Placeholder support works the same
+- The `<%= islands %>` helper works the same
+- Component pattern (`containerId` prop, `useTurboProps`, `useTurboCache`) is unchanged
 
 ### Need Help?
 
 - Check the [README](README.md) for full documentation
-- Open an issue on [GitHub](https://github.com/yourusername/islandjs-rails)
+- Open an issue on [GitHub](https://github.com/praxis-emergent/islandjs-rails)
+
+## Upgrading from 0.x to 1.0
+
+Version 1.0 replaced webpack with Vite. See the [1.0.0 changelog](CHANGELOG.md#100---2025-11-05) for details.
