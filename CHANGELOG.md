@@ -5,47 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-03-03
+## [2.0.0] - 2026-03-14
 
 ### ⚠️ BREAKING CHANGES
 
-**React is now bundled directly** into your Islands bundle. The entrypoint template imports React and ReactDOM as regular npm dependencies and exposes them on `window`. No more separate UMD script tags or CDN downloads.
-
-**Removed the entire UMD/vendor system:**
-- `rails islandjs:install` — Use `yarn add` instead
-- `rails islandjs:update` — Use `yarn upgrade` instead
-- `rails islandjs:remove` — Use `yarn remove` instead
-- `rails islandjs:sync` — No longer applicable
-- `rails islandjs:clean` — No longer applicable
-- `rails islandjs:config` — No longer applicable
-- `rails islandjs:vendor:*` — Vendor system removed
+**React is now bundled directly** into your Islands bundle via npm. The entire UMD/vendor system has been removed — no more CDN downloads, vendor directories, or separate script tags.
 
 ### Changed
-- **`rails islandjs:init`**: Now creates directory structure, entrypoint, Turbo utilities, Vite config, package.json build scripts, installs dependencies, and injects layout helper — one command gets you from zero to building
-- **`islands` helper**: Just renders the bundle script tag (no more vendor UMD partial)
-- **Mount script warnings**: No longer reference `islandjs:install` commands
-- **Entrypoint template**: Imports React/ReactDOM directly and exposes on `window`
-- **Gemspec**: Updated description to reflect React-focused approach
-- **README**: Complete rewrite — focused on React + Turbo, no UMD/vendor documentation
+- **`rails islandjs:init`** is now the single setup command — creates directory structure, entrypoint, Vite config, package.json, installs dependencies, and injects layout helper
+- **`islands` helper** just renders the bundle script tag (no more vendor UMD partial)
+- **Entrypoint template** imports React/ReactDOM directly and exposes on `window`
 
 ### Removed
-- `VendorManager` class and all vendor file management
-- `ViteIntegration` class and Vite externals management
-- `UMD_PATH_PATTERNS`, `CDN_BASES`, `BUILT_IN_GLOBAL_NAME_OVERRIDES` constants
-- All CDN download and UMD resolution functionality
-- All Vite externals management
-- `island_partials`, `umd_versions_debug`, `umd_partial_for`, `react_partials`, `extra_vendor_tag` helpers
-- Vendor configuration options (`vendor_script_mode`, `vendor_order`, `vendor_dir`, etc.)
-- Package management methods (`install!`, `update!`, `remove!`, `sync!`, `status!`, `clean!`)
+- All `islandjs:install/update/remove/sync/clean/config/vendor:*` commands — use `yarn add/upgrade/remove` directly
+- `VendorManager`, `ViteIntegration`, and all UMD/CDN resolution code
+- All vendor-related helpers and configuration options
 
 ### Migration from 1.x
 
-1. Update your Gemfile: `gem 'islandjs-rails', '~> 2.0'`
-2. Add React as a direct dependency: `yarn add react react-dom`
-3. Update your entrypoint (`app/javascript/entrypoints/islands.js`) to import React directly — see the README for the pattern
-4. Remove `public/vendor/islands/` directory (no longer used)
-5. Remove `app/views/shared/islands/` directory (no longer used)
-6. Your `react_component` calls in ERB templates work exactly the same — no view changes needed
+See [UPGRADING.md](UPGRADING.md) for step-by-step instructions. Your `react_component` calls in ERB templates work exactly the same — no view changes needed.
 
 ## [1.1.0] - 2026-01-16
 
